@@ -6,10 +6,12 @@ import javax.validation.ConstraintViolation;
 import java.time.LocalDate;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static ru.yandex.practicum.filmorate.util.ValidationUtil.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static ru.yandex.practicum.filmorate.util.ValidationUtil.MIN_FILM_RELEASE_DATE;
+import static ru.yandex.practicum.filmorate.util.ValidationUtil.MIN_FILM_RELEASE_DATE_STR;
 
-public class FilmValidationTest extends AbstractValidationTest{
+public class FilmValidationTest extends AbstractValidationTest {
 
     @Test
     void shouldBeSuccessValidation() {
@@ -29,31 +31,25 @@ public class FilmValidationTest extends AbstractValidationTest{
     void shouldBeFailedIfNameIsNull() {
         Set<ConstraintViolation<Film>> violations = validator.validate(new Film(null, LocalDate.now(), 100));
         assertEquals(2, violations.size());
-        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("name")
-                && v.getMessage().equals("не должно равняться null")));
-        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("name")
-                && v.getMessage().equals("не должно быть пустым")));
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("name")));
     }
 
     @Test
     void shouldBeFailedIfNameIsBlank() {
         Set<ConstraintViolation<Film>> violations = validator.validate(new Film("   ", LocalDate.now(), 100));
         assertEquals(1, violations.size());
-        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("name")
-                && v.getMessage().equals("не должно быть пустым")));
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("name")));
     }
 
     @Test
     void shouldBeFailedIfDurationIsNotPositive() {
         Set<ConstraintViolation<Film>> violations = validator.validate(new Film("test", LocalDate.now(), 0));
         assertEquals(1, violations.size());
-        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("duration")
-                && v.getMessage().equals("должно быть больше 0")));
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("duration")));
 
         violations = validator.validate(new Film("test", LocalDate.now(), -100));
         assertEquals(1, violations.size());
-        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("duration")
-                && v.getMessage().equals("должно быть больше 0")));
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("duration")));
     }
 
     @Test
@@ -62,8 +58,7 @@ public class FilmValidationTest extends AbstractValidationTest{
         test.setDescription("t".repeat(201));
         Set<ConstraintViolation<Film>> violations = validator.validate(test);
         assertEquals(1, violations.size());
-        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("description")
-                && v.getMessage().equals("размер должен находиться в диапазоне от 0 до " + MAX_DESCRIPTION_LENGTH)));
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("description")));
     }
 
     @Test

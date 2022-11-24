@@ -1,16 +1,18 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exeption.AlreadyExistException;
-import ru.yandex.practicum.filmorate.exeption.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.util.ValidationUtil;
+import ru.yandex.practicum.filmorate.util.exeption.AlreadyExistException;
+import ru.yandex.practicum.filmorate.util.exeption.NotFoundException;
+import ru.yandex.practicum.filmorate.util.exeption.ValidationException;
 
+import javax.validation.Valid;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-
-import static ru.yandex.practicum.filmorate.util.ValidationUtils.validate;
 
 @Slf4j
 @RestController
@@ -25,9 +27,13 @@ public class UserController {
     }
 
     @PostMapping
-    public User create(@RequestBody User user) {
-        validate(user, log);
-        if (user.getId() == null){
+    public User create(@Valid @RequestBody User user, BindingResult errors) {
+        if (errors.hasErrors()) {
+            String message = ValidationUtil.buildErrorMessage(errors.getFieldErrors());
+            log.error(message);
+            throw new ValidationException(message);
+        }
+        if (user.getId() == null) {
             user.setId(++nextId);
         }
         if (users.containsKey(user.getId())) {
@@ -35,14 +41,21 @@ public class UserController {
             log.error(message);
             throw new AlreadyExistException(message);
         }
+        if (user.getName() == null) {
+            user.setName(user.getLogin());
+        }
         log.info("Регистрация пользователя {}", user);
         users.put(user.getId(), user);
         return user;
     }
 
     @PutMapping
-    public User put(@RequestBody User user) {
-        validate(user, log);
+    public User put(@Valid @RequestBody User user, BindingResult errors) {
+        if (errors.hasErrors()) {
+            String message = ValidationUtil.buildErrorMessage(errors.getFieldErrors());
+            log.error(message);
+            throw new ValidationException(message);
+        }
         if (user.getId() == null || !users.containsKey(user.getId())) {
             String message = "Пользователь " + user.getEmail() + " не найден в базе.";
             log.info(message);

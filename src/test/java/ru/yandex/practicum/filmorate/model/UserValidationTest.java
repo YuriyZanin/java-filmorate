@@ -27,7 +27,18 @@ public class UserValidationTest extends AbstractValidationTest {
     @Test
     void shouldBeFailedIfEmailIsNull() {
         Set<ConstraintViolation<User>> violations = validator.validate(new User(null, "login", LocalDate.now()));
+        assertEquals(2, violations.size());
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("email")));
+    }
+
+    @Test
+    void shouldBeFailedIfEmailIsEmpty() {
+        Set<ConstraintViolation<User>> violations = validator.validate(new User("", "login", LocalDate.now()));
         assertEquals(1, violations.size());
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("email")));
+
+        violations = validator.validate(new User("   ", "login", LocalDate.now()));
+        assertEquals(2, violations.size());
         assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("email")));
     }
 
@@ -43,6 +54,12 @@ public class UserValidationTest extends AbstractValidationTest {
         Set<ConstraintViolation<User>> violations = validator.validate(new User("test@mail.com", "   ", LocalDate.now()));
         assertEquals(1, violations.size());
         assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("login")));
+    }
+
+    @Test
+    void shouldBeFailedIfLoginIsEmpty() {
+        Set<ConstraintViolation<User>> violations = validator.validate(new User("test@email.com", "", LocalDate.now()));
+        assertEquals(1, violations.size());
     }
 
     @Test

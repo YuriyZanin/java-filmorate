@@ -9,7 +9,6 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static ru.yandex.practicum.filmorate.util.ValidationUtil.MIN_FILM_RELEASE_DATE;
-import static ru.yandex.practicum.filmorate.util.ValidationUtil.MIN_FILM_RELEASE_DATE_STR;
 
 public class FilmValidationTest extends AbstractValidationTest {
 
@@ -67,7 +66,6 @@ public class FilmValidationTest extends AbstractValidationTest {
                 new Film("test", MIN_FILM_RELEASE_DATE.minusDays(1), 500));
         System.out.println(violations);
         assertEquals(1, violations.size());
-        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("releaseDate")
-                && v.getMessage().equals("дата релиза должна быть не раньше " + MIN_FILM_RELEASE_DATE_STR)));
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("releaseDate")));
     }
 }

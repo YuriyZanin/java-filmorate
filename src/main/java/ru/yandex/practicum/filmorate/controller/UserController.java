@@ -41,7 +41,7 @@ public class UserController {
             log.error(message);
             throw new AlreadyExistException(message);
         }
-        if (user.getName() == null) {
+        if (user.getName() == null || user.getName().isEmpty()) {
             user.setName(user.getLogin());
         }
         log.info("Регистрация пользователя {}", user);

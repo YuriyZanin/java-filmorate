@@ -8,6 +8,8 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 import static ru.yandex.practicum.filmorate.util.ValidationUtil.MAX_DESCRIPTION_LENGTH;
 import static ru.yandex.practicum.filmorate.util.ValidationUtil.MIN_FILM_RELEASE_DATE_STR;
@@ -24,5 +26,6 @@ public class Film {
     private final int duration;
     @Size(max = MAX_DESCRIPTION_LENGTH)
     private String description;
-    private Integer id;
+    private Long id;
+    private final Set<Long> likes = new HashSet<>();
 }

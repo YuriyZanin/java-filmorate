@@ -4,26 +4,32 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.user.UserService;
 import ru.yandex.practicum.filmorate.util.ValidationUtil;
-import ru.yandex.practicum.filmorate.util.exeption.AlreadyExistException;
-import ru.yandex.practicum.filmorate.util.exeption.NotFoundException;
 import ru.yandex.practicum.filmorate.util.exeption.ValidationException;
 
 import javax.validation.Valid;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    private final Map<Integer, User> users = new HashMap<>();
-    private int nextId = 0;
+
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping
     public Collection<User> findAll() {
-        return users.values();
+        return userService.getAll();
+    }
+
+    @GetMapping("/{id}")
+    public User get(@PathVariable Long id) {
+        return userService.get(id);
     }
 
     @PostMapping
@@ -33,20 +39,7 @@ public class UserController {
             log.error(message);
             throw new ValidationException(message);
         }
-        if (user.getId() == null) {
-            user.setId(++nextId);
-        }
-        if (users.containsKey(user.getId())) {
-            String message = "Пользователь " + user.getEmail() + " уже зарегистрирован.";
-            log.error(message);
-            throw new AlreadyExistException(message);
-        }
-        if (user.getName() == null || user.getName().isEmpty()) {
-            user.setName(user.getLogin());
-        }
-        log.info("Регистрация пользователя {}", user);
-        users.put(user.getId(), user);
-        return user;
+        return userService.create(user);
     }
 
     @PutMapping
@@ -56,13 +49,26 @@ public class UserController {
             log.error(message);
             throw new ValidationException(message);
         }
-        if (user.getId() == null || !users.containsKey(user.getId())) {
-            String message = "Пользователь " + user.getEmail() + " не найден в базе.";
-            log.info(message);
-            throw new NotFoundException(message);
-        }
-        log.info("Обновление пользователя {}", user);
-        users.put(user.getId(), user);
-        return user;
+        return userService.update(user);
+    }
+
+    @PutMapping("/{id}/friends/{friendId}")
+    public User addFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        return userService.addFriend(id, friendId);
+    }
+
+    @DeleteMapping("{id}/friends/{friendId}")
+    public User removeFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        return userService.removeFriend(id, friendId);
+    }
+
+    @GetMapping("/{id}/friends")
+    public Collection<User> findFriends(@PathVariable Long id) {
+        return userService.getFriends(id);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public Collection<User> findCommon(@PathVariable Long id, @PathVariable Long otherId) {
+        return userService.getCommonFriends(id, otherId);
     }
 }

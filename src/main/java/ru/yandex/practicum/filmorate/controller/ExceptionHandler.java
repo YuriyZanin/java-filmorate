@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.yandex.practicum.filmorate.model.ErrorResponse;
 import ru.yandex.practicum.filmorate.util.exeption.NotFoundException;
 import ru.yandex.practicum.filmorate.util.exeption.ValidationException;
 
@@ -28,5 +27,17 @@ public class ExceptionHandler {
         return new ErrorResponse(
                 "Произошла непредвиденная ошибка."
         );
+    }
+
+    static class ErrorResponse {
+        private final String error;
+
+        public ErrorResponse(String error) {
+            this.error = error;
+        }
+
+        public String getError() {
+            return error;
+        }
     }
 }

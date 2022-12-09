@@ -21,10 +21,12 @@ public class UserService {
     }
 
     public User create(User user) {
+        prepareUser(user);
         return userStorage.create(user);
     }
 
     public User update(User user) {
+        prepareUser(user);
         return userStorage.update(user);
     }
 
@@ -36,8 +38,8 @@ public class UserService {
         User user = userStorage.get(userId);
         User friend = userStorage.get(friendId);
 
-        user.getFriends().add(friend.getId());
-        friend.getFriends().add(user.getId());
+        user.getFriendIds().add(friend.getId());
+        friend.getFriendIds().add(user.getId());
 
         userStorage.update(friend);
         return userStorage.update(user);
@@ -47,8 +49,8 @@ public class UserService {
         User user = userStorage.get(userId);
         User friend = userStorage.get(friendId);
 
-        user.getFriends().remove(friend.getId());
-        friend.getFriends().remove(user.getId());
+        user.getFriendIds().remove(friend.getId());
+        friend.getFriendIds().remove(user.getId());
 
         userStorage.update(friend);
         return userStorage.update(user);
@@ -56,15 +58,21 @@ public class UserService {
 
     public Collection<User> getFriends(Long userId) {
         User user = userStorage.get(userId);
-        return user.getFriends().stream().map(userStorage::get).collect(Collectors.toList());
+        return user.getFriendIds().stream().map(userStorage::get).collect(Collectors.toList());
     }
 
     public Collection<User> getCommonFriends(Long userId, Long otherId) {
         User user = userStorage.get(userId);
         User other = userStorage.get(otherId);
-        return user.getFriends().stream()
-                .filter(id -> other.getFriends().contains(id))
+        return user.getFriendIds().stream()
+                .filter(id -> other.getFriendIds().contains(id))
                 .map(userStorage::get)
                 .collect(Collectors.toList());
+    }
+
+    private void prepareUser(User user) {
+        if (user.getName() == null || user.getName().isEmpty()) {
+            user.setName(user.getLogin());
+        }
     }
 }

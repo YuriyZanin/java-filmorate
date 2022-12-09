@@ -32,9 +32,6 @@ public class ImMemoryUserStorage implements UserStorage {
             log.error(message);
             throw new AlreadyExistException(message);
         }
-        if (user.getName() == null || user.getName().isEmpty()) {
-            user.setName(user.getLogin());
-        }
         log.info("Регистрация пользователя {}", user);
         users.put(user.getId(), user);
         return user;

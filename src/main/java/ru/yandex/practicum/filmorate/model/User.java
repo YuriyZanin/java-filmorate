@@ -1,11 +1,9 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
+import ru.yandex.practicum.filmorate.util.ValidationUtil;
 
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.PastOrPresent;
+import javax.validation.constraints.*;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
@@ -17,7 +15,7 @@ public class User {
     @Email
     private final String email;
     @NotNull
-    @NotBlank
+    @Pattern(regexp = ValidationUtil.LOGIN_PATTERN)
     private final String login;
     @PastOrPresent
     private final LocalDate birthday;

@@ -27,5 +27,5 @@ public class Film {
     @Size(max = MAX_DESCRIPTION_LENGTH)
     private String description;
     private Long id;
-    private final Set<Long> likes = new HashSet<>();
+    private final Set<Long> whoLikedUserIds = new HashSet<>();
 }

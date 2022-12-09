@@ -39,21 +39,21 @@ public class FilmService {
     public Film addLike(Long filmId, Long userId) {
         User user = userStorage.get(userId);
         Film film = filmStorage.get(filmId);
-        film.getLikes().add(user.getId());
+        film.getWhoLikedUserIds().add(user.getId());
         return filmStorage.update(film);
     }
 
     public Film removeLike(Long filmId, Long userId) {
         User user = userStorage.get(userId);
         Film film = filmStorage.get(filmId);
-        film.getLikes().remove(user.getId());
+        film.getWhoLikedUserIds().remove(user.getId());
         return filmStorage.update(film);
     }
 
     public Collection<Film> getPopular(Integer size) {
         Collection<Film> films = filmStorage.getAll();
         return films.stream()
-                .sorted((f1, f2) -> Integer.compare(f2.getLikes().size(), f1.getLikes().size()))
+                .sorted((f1, f2) -> Integer.compare(f2.getWhoLikedUserIds().size(), f1.getWhoLikedUserIds().size()))
                 .limit(size)
                 .collect(Collectors.toList());
     }

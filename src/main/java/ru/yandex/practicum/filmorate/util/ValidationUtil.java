@@ -16,6 +16,8 @@ public class ValidationUtil {
     public static final LocalDate MIN_FILM_RELEASE_DATE = LocalDate.parse(MIN_FILM_RELEASE_DATE_STR, DATE_FORMATTER);
     public static final int MAX_DESCRIPTION_LENGTH = 200;
 
+    public static final String LOGIN_PATTERN = "\\S+";
+
     public static String buildErrorString(FieldError error) {
         return String.format("Поле %s содержит ошибку: \"%s\"", error.getField(), error.getDefaultMessage());
     }

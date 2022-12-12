@@ -45,13 +45,21 @@ public class UserValidationTest extends AbstractValidationTest {
     @Test
     void shouldBeFailedIfLoginIsNull() {
         Set<ConstraintViolation<User>> violations = validator.validate(new User("test@mail.com", null, LocalDate.now()));
-        assertEquals(2, violations.size());
+        assertEquals(1, violations.size());
         assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("login")));
     }
 
     @Test
-    void shouldBeFailedIfLoginIsBlank() {
-        Set<ConstraintViolation<User>> violations = validator.validate(new User("test@mail.com", "   ", LocalDate.now()));
+    void shouldBeFailedIfLoginWithSpaces() {
+        Set<ConstraintViolation<User>> violations = validator.validate(new User("test@mail.com", "a b", LocalDate.now()));
+        assertEquals(1, violations.size());
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("login")));
+
+        violations = validator.validate(new User("test@mail.com", " ab ", LocalDate.now()));
+        assertEquals(1, violations.size());
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("login")));
+
+        violations = validator.validate(new User("test@mail.com", "   ", LocalDate.now()));
         assertEquals(1, violations.size());
         assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("login")));
     }

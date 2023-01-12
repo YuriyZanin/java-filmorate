@@ -34,7 +34,6 @@ CREATE TABLE IF NOT EXISTS film_genres
     film_id  INTEGER,
     genre_id VARCHAR,
     PRIMARY KEY (film_id, genre_id),
-    CONSTRAINT film_genre_idx UNIQUE (film_id, genre_id),
     FOREIGN KEY (film_id) REFERENCES films (id) ON DELETE CASCADE,
     FOREIGN KEY (genre_id) REFERENCES genres (id) ON DELETE CASCADE
 );
@@ -54,7 +53,6 @@ CREATE TABLE IF NOT EXISTS film_who_liked_users
     film_id           INTEGER,
     who_liked_user_id INTEGER,
     PRIMARY KEY (film_id, who_liked_user_id),
-    CONSTRAINT film_user_idx UNIQUE (film_id, who_liked_user_id),
     FOREIGN KEY (film_id) REFERENCES films (id) ON DELETE CASCADE,
     FOREIGN KEY (who_liked_user_id) REFERENCES users (id) ON DELETE CASCADE
 );

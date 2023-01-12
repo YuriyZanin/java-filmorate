@@ -9,6 +9,7 @@ import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Rating;
 import ru.yandex.practicum.filmorate.util.exeption.NotFoundException;
 
 import java.sql.Date;
@@ -23,24 +24,27 @@ import java.util.*;
 public class FilmDbStorage implements FilmStorage {
 
     private final JdbcTemplate jdbcTemplate;
-    private final RatingStorage ratingStorage;
-    private final GenreStorage genreStorage;
 
-    public FilmDbStorage(JdbcTemplate jdbcTemplate, RatingStorage ratingStorage, GenreStorage genreStorage) {
+    public FilmDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
-        this.ratingStorage = ratingStorage;
-        this.genreStorage = genreStorage;
     }
 
     @Override
     public Collection<Film> getAll() {
-        List<Film> films = jdbcTemplate.query("SELECT * FROM films", ((rs, rowNum) -> makeFilm(rs)));
+        List<Film> films = jdbcTemplate.query(
+                "SELECT f.id AS film_id, f.name AS film_name, f.description, f.release_date, f.duration, f.rating_id, r.name AS rating_name " +
+                "FROM films f " +
+                "JOIN ratings r ON r.id = f.rating_id",
+                ((rs, rowNum) -> makeFilm(rs)));
 
         Map<Long, Set<Genre>> filmGenres = new HashMap<>();
-        jdbcTemplate.query("SELECT * FROM film_genres", rs -> {
+        jdbcTemplate.query("SELECT fg.film_id, fg.genre_id, g.name " +
+                "FROM film_genres AS fg " +
+                "JOIN genres g ON g.id = fg.genre_id", rs -> {
             long filmId = rs.getLong("film_id");
             filmGenres.putIfAbsent(filmId, new HashSet<>());
-            filmGenres.get(filmId).add(genreStorage.findById(rs.getLong("genre_id")));
+            filmGenres.get(filmId).add(new Genre(rs.getLong("genre_id"),
+                    rs.getString("name")));
         });
 
         Map<Long, Set<Long>> whoLikedUsers = new HashMap<>();
@@ -112,22 +116,31 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film get(Long id) {
-        SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet("SELECT * FROM films WHERE id = ?", id);
-        List<Genre> genres = jdbcTemplate.query("SELECT genre_id FROM film_genres WHERE film_id = ?",
-                ((rs, rowNum) -> genreStorage.findById(rs.getLong("genre_id"))), id);
+        List<Genre> genres = jdbcTemplate.query("SELECT fg.genre_id , g.name " +
+                        "FROM film_genres AS fg " +
+                        "JOIN genres g ON g.id = fg.genre_id " +
+                        "WHERE fg.film_id = ?",
+                ((rs, rowNum) -> new Genre(rs.getLong("genre_id"), rs.getString("name"))), id);
+
         List<Long> whoLikedUserIds = jdbcTemplate.query("SELECT who_liked_user_id FROM film_who_liked_users WHERE film_id = ?",
                 (rs, rowNum) -> rs.getLong("who_liked_user_id"), id);
 
+        SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(
+                "SELECT f.id AS film_id, f.name AS film_name, f.release_date, f.duration, f.description, f.rating_id, r.name AS rating_name " +
+                "FROM films f " +
+                "JOIN ratings r ON r.id = f.rating_id " +
+                "WHERE f.id = ?", id);
+
         if (sqlRowSet.next()) {
             Film film = new Film(
-                    sqlRowSet.getString("name"),
-                    Objects.requireNonNull(sqlRowSet.getDate("release_date")).toLocalDate(),
-                    sqlRowSet.getInt("duration"),
-                    ratingStorage.findById(sqlRowSet.getLong("rating_id"))
+                    sqlRowSet.getString("FILM_NAME"),
+                    Objects.requireNonNull(sqlRowSet.getDate("RELEASE_DATE")).toLocalDate(),
+                    sqlRowSet.getInt("DURATION"),
+                    new Rating(sqlRowSet.getLong("RATING_ID"), sqlRowSet.getString("RATING_NAME"))
             );
 
-            film.setId(sqlRowSet.getLong("id"));
-            film.setDescription(sqlRowSet.getString("description"));
+            film.setId(sqlRowSet.getLong("FILM_ID"));
+            film.setDescription(sqlRowSet.getString("DESCRIPTION"));
             film.getGenres().addAll(genres);
             film.getWhoLikedUserIds().addAll(whoLikedUserIds);
 
@@ -141,12 +154,12 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private Film makeFilm(ResultSet rs) throws SQLException {
-        Film film = new Film(rs.getString("name"),
+        Film film = new Film(rs.getString("film_name"),
                 rs.getDate("release_date").toLocalDate(),
                 rs.getInt("duration"),
-                ratingStorage.findById(rs.getLong("rating_id"))
+                new Rating(rs.getLong("rating_id"), rs.getString("rating_name"))
         );
-        film.setId(rs.getLong("id"));
+        film.setId(rs.getLong("film_id"));
         film.setDescription(rs.getString("description"));
         return film;
     }

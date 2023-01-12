@@ -8,8 +8,10 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import static ru.yandex.practicum.filmorate.util.ValidationUtil.MAX_DESCRIPTION_LENGTH;
 import static ru.yandex.practicum.filmorate.util.ValidationUtil.MIN_FILM_RELEASE_DATE_STR;
@@ -27,5 +29,7 @@ public class Film {
     @Size(max = MAX_DESCRIPTION_LENGTH)
     private String description;
     private Long id;
+    private final Rating mpa;
     private final Set<Long> whoLikedUserIds = new HashSet<>();
+    private final Set<Genre> genres = new TreeSet<>(Comparator.comparing(Genre::getId));
 }

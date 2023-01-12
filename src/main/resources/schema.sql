@@ -59,12 +59,10 @@ CREATE TABLE IF NOT EXISTS film_who_liked_users
 
 CREATE TABLE IF NOT EXISTS friendships
 (
-    initiator_id      INTEGER,
-    receiver_id       INTEGER,
-    friendship_status VARCHAR,
-    PRIMARY KEY (initiator_id, receiver_id),
-    FOREIGN KEY (initiator_id) REFERENCES users (id) ON DELETE CASCADE,
-    FOREIGN KEY (receiver_id) REFERENCES users (id) ON DELETE CASCADE,
-    CHECK friendship_status IN ('CONFIRMED', 'NOT_CONFIRMED'),
-    CHECK initiator_id <> receiver_id
+    user_id      INTEGER,
+    friend_id       INTEGER,
+    PRIMARY KEY (user_id, friend_id),
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (friend_id) REFERENCES users (id) ON DELETE CASCADE,
+    CHECK user_id <> friend_id
 );

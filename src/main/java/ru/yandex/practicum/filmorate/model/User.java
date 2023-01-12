@@ -5,8 +5,8 @@ import ru.yandex.practicum.filmorate.util.ValidationUtil;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 public class User {
@@ -21,5 +21,5 @@ public class User {
     private final LocalDate birthday;
     private Long id;
     private String name;
-    private Map<Long, FriendshipStatus> friends = new HashMap<>();
+    private Set<Long> friendIds = new HashSet<>();
 }

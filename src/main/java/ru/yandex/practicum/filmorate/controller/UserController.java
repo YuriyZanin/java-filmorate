@@ -64,7 +64,7 @@ public class UserController {
 
     @PutMapping("/{id}/friends/{friendId}/confirm")
     public User confirmFriend(@PathVariable Long id, @PathVariable Long friendId) {
-        return userService.addConfirmFriend(id, friendId);
+        return userService.addFriendWithConfirm(id, friendId);
     }
 
     @GetMapping("/{id}/friends")

@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.service.user;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -41,17 +40,20 @@ public class UserService {
         User user = userStorage.get(userId);
         User friend = userStorage.get(friendId);
 
-        user.getFriends().put(friend.getId(), FriendshipStatus.NOT_CONFIRMED);
+        user.getFriendIds().add(friend.getId());
 
         userStorage.update(friend);
         return userStorage.update(user);
     }
 
-    public User addConfirmFriend(Long userId, Long friendId) {
+    public User addFriendWithConfirm(Long userId, Long friendId) {
         User user = userStorage.get(userId);
         User friend = userStorage.get(friendId);
 
-        user.getFriends().put(friend.getId(), FriendshipStatus.CONFIRMED);
+        user.getFriendIds().add(friend.getId());
+        friend.getFriendIds().add(userId);
+
+        userStorage.update(friend);
         return userStorage.update(user);
     }
 
@@ -59,7 +61,7 @@ public class UserService {
         User user = userStorage.get(userId);
         User friend = userStorage.get(friendId);
 
-        user.getFriends().remove(friendId);
+        user.getFriendIds().remove(friendId);
 
         userStorage.update(friend);
         return userStorage.update(user);
@@ -67,14 +69,14 @@ public class UserService {
 
     public Collection<User> getFriends(Long userId) {
         User user = userStorage.get(userId);
-        return user.getFriends().keySet().stream().map(userStorage::get).collect(Collectors.toList());
+        return user.getFriendIds().stream().map(userStorage::get).collect(Collectors.toList());
     }
 
     public Collection<User> getCommonFriends(Long userId, Long otherId) {
         User user = userStorage.get(userId);
         User other = userStorage.get(otherId);
-        Set<Long> userFriends = user.getFriends().keySet();
-        Set<Long> otherFriends = other.getFriends().keySet();
+        Set<Long> userFriends = user.getFriendIds();
+        Set<Long> otherFriends = other.getFriendIds();
         return userFriends.stream()
                 .filter(otherFriends::contains)
                 .map(userStorage::get)

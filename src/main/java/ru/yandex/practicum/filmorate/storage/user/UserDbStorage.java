@@ -7,7 +7,6 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.util.exeption.NotFoundException;
 
@@ -32,20 +31,19 @@ public class UserDbStorage implements UserStorage {
     public Collection<User> getAll() {
         String sqlQuery = "SELECT * FROM users";
 
-        Map<Long, Map<Long, FriendshipStatus>> userFriends = new HashMap<>();
+        Map<Long, Set<Long>> userFriends = new HashMap<>();
         jdbcTemplate.query("SELECT * FROM friendships", (rs -> {
-            long initiator_id = rs.getLong("initiator_id");
-            long receiver_id = rs.getLong("receiver_id");
-            String status = rs.getString("friendship_status");
-            userFriends.putIfAbsent(initiator_id, new HashMap<>());
-            userFriends.get(initiator_id).put(receiver_id, FriendshipStatus.valueOf(status));
+            long userId = rs.getLong("user_id");
+            long friendId = rs.getLong("friend_id");
+            userFriends.putIfAbsent(userId, new HashSet<>());
+            userFriends.get(userId).add(friendId);
         }));
 
         List<User> users = jdbcTemplate.query(sqlQuery, ((rs, rowNum) -> makeUser(rs)));
         users.forEach(user -> {
-            Map<Long, FriendshipStatus> friends = userFriends.get(user.getId());
-            if (friends != null) {
-                user.getFriends().putAll(friends);
+            Set<Long> friendIds = userFriends.get(user.getId());
+            if (friendIds != null) {
+                user.getFriendIds().addAll(friendIds);
             }
         });
         return users;
@@ -66,7 +64,7 @@ public class UserDbStorage implements UserStorage {
             return stmt;
         }, keyHolder);
 
-        long userId = keyHolder.getKey().longValue();
+        long userId = Objects.requireNonNull(keyHolder.getKey()).longValue();
         user.setId(userId);
         updateFriends(user);
         log.info("Пользователь {} создан с идентификатором {}", user.getEmail(), userId);
@@ -97,16 +95,13 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public User get(Long id) {
-        SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet("SELECT * FROM users WHERE id = ?", id);
-        String friendQuery = "SELECT * FROM friendships WHERE initiator_id = ?";
-
-        Map<Long, FriendshipStatus> friends = new HashMap<>();
-        jdbcTemplate.query(friendQuery, (rs -> {
-            long receiver_id = rs.getLong("receiver_id");
-            String status = rs.getString("friendship_status");
-            friends.put(receiver_id, FriendshipStatus.valueOf(status));
+        Set<Long> friendIds = new HashSet<>();
+        jdbcTemplate.query("SELECT * FROM friendships WHERE user_id = ?", (rs -> {
+            long friend_id = rs.getLong("friend_id");
+            friendIds.add(friend_id);
         }), id);
 
+        SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet("SELECT * FROM users WHERE id = ?", id);
         if (sqlRowSet.next()) {
             User user = new User(
                     sqlRowSet.getString("email"),
@@ -115,7 +110,7 @@ public class UserDbStorage implements UserStorage {
 
             user.setId(sqlRowSet.getLong("id"));
             user.setName(sqlRowSet.getString("name"));
-            user.getFriends().putAll(friends);
+            user.getFriendIds().addAll(friendIds);
 
             log.info("Найден пользователь: {} {}", user.getId(), user.getEmail());
             return user;
@@ -136,13 +131,13 @@ public class UserDbStorage implements UserStorage {
     }
 
     private void updateFriends(User user) {
-        jdbcTemplate.update("DELETE FROM friendships WHERE initiator_id = ?", user.getId());
+        jdbcTemplate.update("DELETE FROM friendships WHERE user_id = ?", user.getId());
 
-        if (!user.getFriends().isEmpty()) {
-            for (Map.Entry<Long, FriendshipStatus> pair : user.getFriends().entrySet()) {
-                jdbcTemplate.update("INSERT INTO friendships(initiator_id, receiver_id, friendship_status)" +
-                                "VALUES (?,?,?)",
-                        user.getId(), pair.getKey(), pair.getValue().toString()
+        if (!user.getFriendIds().isEmpty()) {
+            for (Long friendId : user.getFriendIds()) {
+                jdbcTemplate.update("INSERT INTO friendships(user_id, friend_id)" +
+                                "VALUES (?,?)",
+                        user.getId(), friendId
                 );
             }
         }

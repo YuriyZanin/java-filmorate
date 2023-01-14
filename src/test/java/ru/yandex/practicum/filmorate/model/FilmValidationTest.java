@@ -14,13 +14,14 @@ public class FilmValidationTest extends AbstractValidationTest {
 
     @Test
     void shouldBeSuccessValidation() {
-        Set<ConstraintViolation<Film>> violations = validator.validate(new Film("test", LocalDate.now(), 100));
+        Rating rating = new Rating(1L, "test");
+        Set<ConstraintViolation<Film>> violations = validator.validate(new Film("test", LocalDate.now(), 100, rating));
         assertTrue(violations.isEmpty());
 
-        violations = validator.validate(new Film("test", MIN_FILM_RELEASE_DATE, 100));
+        violations = validator.validate(new Film("test", MIN_FILM_RELEASE_DATE, 100, rating));
         assertTrue(violations.isEmpty());
 
-        Film descriptionTest = new Film("test", LocalDate.now(), 100);
+        Film descriptionTest = new Film("test", LocalDate.now(), 100, rating);
         descriptionTest.setDescription("t".repeat(200));
         violations = validator.validate(descriptionTest);
         assertTrue(violations.isEmpty());
@@ -28,32 +29,36 @@ public class FilmValidationTest extends AbstractValidationTest {
 
     @Test
     void shouldBeFailedIfNameIsNull() {
-        Set<ConstraintViolation<Film>> violations = validator.validate(new Film(null, LocalDate.now(), 100));
+        Rating rating = new Rating(1L, "test");
+        Set<ConstraintViolation<Film>> violations = validator.validate(new Film(null, LocalDate.now(), 100, rating));
         assertEquals(2, violations.size());
         assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("name")));
     }
 
     @Test
     void shouldBeFailedIfNameIsBlank() {
-        Set<ConstraintViolation<Film>> violations = validator.validate(new Film("   ", LocalDate.now(), 100));
+        Rating rating = new Rating(1L, "test");
+        Set<ConstraintViolation<Film>> violations = validator.validate(new Film("   ", LocalDate.now(), 100, rating));
         assertEquals(1, violations.size());
         assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("name")));
     }
 
     @Test
     void shouldBeFailedIfDurationIsNotPositive() {
-        Set<ConstraintViolation<Film>> violations = validator.validate(new Film("test", LocalDate.now(), 0));
+        Rating rating = new Rating(1L, "test");
+        Set<ConstraintViolation<Film>> violations = validator.validate(new Film("test", LocalDate.now(), 0, rating));
         assertEquals(1, violations.size());
         assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("duration")));
 
-        violations = validator.validate(new Film("test", LocalDate.now(), -100));
+        violations = validator.validate(new Film("test", LocalDate.now(), -100, rating));
         assertEquals(1, violations.size());
         assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("duration")));
     }
 
     @Test
     void shouldBeFailedIfDescriptionOverSize() {
-        Film test = new Film("test", LocalDate.now(), 100);
+        Rating rating = new Rating(1L, "test");
+        Film test = new Film("test", LocalDate.now(), 100, rating);
         test.setDescription("t".repeat(201));
         Set<ConstraintViolation<Film>> violations = validator.validate(test);
         assertEquals(1, violations.size());
@@ -62,8 +67,9 @@ public class FilmValidationTest extends AbstractValidationTest {
 
     @Test
     void shouldBeFailedIfReleaseDateBeforeMin() {
+        Rating rating = new Rating(1L, "test");
         Set<ConstraintViolation<Film>> violations = validator.validate(
-                new Film("test", MIN_FILM_RELEASE_DATE.minusDays(1), 500));
+                new Film("test", MIN_FILM_RELEASE_DATE.minusDays(1), 500, rating));
         System.out.println(violations);
         assertEquals(1, violations.size());
         assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("releaseDate")));

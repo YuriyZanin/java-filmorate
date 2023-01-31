@@ -60,4 +60,9 @@ public class InMemoryFilmStorage implements FilmStorage {
         log.info("Запрос фильма {}", film);
         return film;
     }
+
+    @Override
+    public Collection<Film> getByUser(Long userId) {
+        return null;
+    }
 }

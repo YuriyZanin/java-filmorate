@@ -63,7 +63,12 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public Collection<Film> findPopular(@RequestParam(defaultValue = "10", required = false) Integer count){
+    public Collection<Film> findPopular(@RequestParam(defaultValue = "10", required = false) Integer count) {
         return filmService.getPopular(count);
+    }
+
+    @GetMapping("/common")
+    public Collection<Film> findCommon(@RequestParam Long userId, @RequestParam Long friendId) {
+        return filmService.getCommon(userId, friendId);
     }
 }

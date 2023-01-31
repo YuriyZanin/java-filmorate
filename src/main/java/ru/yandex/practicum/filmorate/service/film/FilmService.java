@@ -58,4 +58,12 @@ public class FilmService {
                 .limit(size)
                 .collect(Collectors.toList());
     }
+
+    public Collection<Film> getCommon(Long userId, Long friendId) {
+        User user = userStorage.get(userId);
+        User friend = userStorage.get(friendId);
+        Collection<Film> userFilms = filmStorage.getByUser(user.getId());
+        Collection<Film> friendFilms = filmStorage.getByUser(friend.getId());
+        return userFilms.stream().filter(friendFilms::contains).collect(Collectors.toList());
+    }
 }

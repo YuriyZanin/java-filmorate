@@ -21,8 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @AutoConfigureTestDatabase
@@ -152,5 +151,18 @@ class FilmoRateApplicationTests {
         Collection<Rating> aLl = ratingDbStorage.findALl();
         assertFalse(aLl.isEmpty());
         assertEquals(5, aLl.size());
+    }
+
+    @Test
+    void testFindUserFilms() {
+        User user = userStorage.create(new User("test@mail.com", "login", LocalDate.now()));
+        Collection<Film> userFilms = filmStorage.getByUser(user.getId());
+        assertTrue(userFilms.isEmpty());
+
+        Film film = filmStorage.save(new Film("test", LocalDate.now(), 100, ratingDbStorage.findById(1L)));
+        film.getWhoLikedUserIds().add(user.getId());
+        filmStorage.update(film);
+        userFilms = filmStorage.getByUser(user.getId());
+        assertEquals(1, userFilms.size());
     }
 }

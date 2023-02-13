@@ -6,6 +6,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.util.exeption.NotFoundException;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -30,23 +31,25 @@ public class FilmService {
     }
 
     public Film update(Film film) {
-        return filmStorage.update(film);
+        Film update = filmStorage.update(film);
+        return get(update.getId());
     }
 
     public Film get(Long id) {
-        return filmStorage.get(id);
+        return filmStorage.get(id).orElseThrow(() -> new NotFoundException(
+                String.format("Фильм с id %s не найден", id)));
     }
 
     public Film addLike(Long filmId, Long userId) {
         User user = userStorage.get(userId);
-        Film film = filmStorage.get(filmId);
+        Film film = get(filmId);
         film.getWhoLikedUserIds().add(user.getId());
         return filmStorage.update(film);
     }
 
     public Film removeLike(Long filmId, Long userId) {
         User user = userStorage.get(userId);
-        Film film = filmStorage.get(filmId);
+        Film film = get(filmId);
         film.getWhoLikedUserIds().remove(user.getId());
         return filmStorage.update(film);
     }
@@ -60,10 +63,6 @@ public class FilmService {
     }
 
     public Collection<Film> getCommon(Long userId, Long friendId) {
-        User user = userStorage.get(userId);
-        User friend = userStorage.get(friendId);
-        Collection<Film> userFilms = filmStorage.getByUser(user.getId());
-        Collection<Film> friendFilms = filmStorage.getByUser(friend.getId());
-        return userFilms.stream().filter(friendFilms::contains).collect(Collectors.toList());
+        return filmStorage.getCommon(userId, friendId);
     }
 }

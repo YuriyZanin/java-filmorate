@@ -5,11 +5,11 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.film.FilmService;
-import ru.yandex.practicum.filmorate.util.ValidationUtil;
-import ru.yandex.practicum.filmorate.util.exeption.ValidationException;
 
 import javax.validation.Valid;
 import java.util.Collection;
+
+import static ru.yandex.practicum.filmorate.util.ValidationUtil.checkErrors;
 
 @Slf4j
 @RestController
@@ -34,21 +34,13 @@ public class FilmController {
 
     @PostMapping
     public Film create(@Valid @RequestBody Film film, BindingResult errors) {
-        if (errors.hasErrors()) {
-            String message = ValidationUtil.buildErrorMessage(errors.getFieldErrors());
-            log.error(message);
-            throw new ValidationException(message);
-        }
+        checkErrors(errors);
         return filmService.create(film);
     }
 
     @PutMapping
     public Film put(@Valid @RequestBody Film film, BindingResult errors) {
-        if (errors.hasErrors()) {
-            String message = ValidationUtil.buildErrorMessage(errors.getFieldErrors());
-            log.error(message);
-            throw new ValidationException(message);
-        }
+        checkErrors(errors);
         return filmService.update(film);
     }
 

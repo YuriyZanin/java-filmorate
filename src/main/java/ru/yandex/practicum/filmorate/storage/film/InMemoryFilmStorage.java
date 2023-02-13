@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.util.exeption.NotFoundException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 @Slf4j
@@ -50,19 +51,23 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film get(Long id) {
+    public Optional<Film> get(Long id) {
         Film film = films.get(id);
-        if (film == null){
-            String message = "Фильм с id " + id +" не найден в базе";
-            log.error(message);
-            throw new NotFoundException(message);
-        }
         log.info("Запрос фильма {}", film);
-        return film;
+        if (film != null){
+            return Optional.of(film);
+        } else {
+            return Optional.empty();
+        }
     }
 
     @Override
     public Collection<Film> getByUser(Long userId) {
+        return null;
+    }
+
+    @Override
+    public Collection<Film> getCommon(Long userId, Long friendId) {
         return null;
     }
 }

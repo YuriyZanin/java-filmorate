@@ -19,6 +19,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -79,8 +80,10 @@ class FilmoRateApplicationTests {
 
     @Test
     void testFindFilmById() {
-        filmStorage.save(new Film("test", LocalDate.now(), 100, ratingDbStorage.findById(1L)));
-        Optional<Film> filmOptional = Optional.ofNullable(filmStorage.get(1L));
+        Film test = Film.builder().name("test").releaseDate(LocalDate.now()).duration(100).mpa(Rating.builder().id(1L)
+                .build()).build();
+        filmStorage.save(test);
+        Optional<Film> filmOptional = filmStorage.get(1L);
 
         assertThat(filmOptional)
                 .isPresent()
@@ -90,8 +93,11 @@ class FilmoRateApplicationTests {
 
     @Test
     void testCreateFilm() {
-        Film created = filmStorage.save(new Film("test", LocalDate.now(), 100, ratingDbStorage.findById(1L)));
-        Optional<Film> filmOptional = Optional.ofNullable(filmStorage.get(1L));
+        Film created = Film.builder()
+                .name("test").releaseDate(LocalDate.now()).duration(100).mpa(ratingDbStorage.findById(1L)).build();
+        created.getGenres().add(genreDbStorage.findById(1L));
+        filmStorage.save(created);
+        Optional<Film> filmOptional = filmStorage.get(1L);
 
         assertThat(filmOptional)
                 .isPresent()
@@ -100,7 +106,9 @@ class FilmoRateApplicationTests {
 
     @Test
     void testUpdateFilm() {
-        Film created = filmStorage.save(new Film("test", LocalDate.now(), 100, ratingDbStorage.findById(1L)));
+        Film created = Film.builder()
+                .name("test").releaseDate(LocalDate.now()).duration(100).mpa(Rating.builder().id(1L).build()).build();
+        filmStorage.save(created);
         created.getGenres().add(genreDbStorage.findById(1L));
         created.setDescription("updated description");
         Film updated = filmStorage.update(created);
@@ -112,9 +120,10 @@ class FilmoRateApplicationTests {
 
     @Test
     void testFindAllFilms() {
-        Film test1 = filmStorage.save(new Film("test1", LocalDate.now(), 100, ratingDbStorage.findById(1L)));
-        Film test2 = filmStorage.save(new Film("test2", LocalDate.now(), 90, ratingDbStorage.findById(2L)));
-
+        Film test1 = Film.builder().name("test1").releaseDate(LocalDate.now()).duration(100).mpa(ratingDbStorage.findById(1L)).build();
+        Film test2 = Film.builder().name("test2").releaseDate(LocalDate.now()).duration(90).mpa(ratingDbStorage.findById(2L)).build();
+        filmStorage.save(test1);
+        filmStorage.save(test2);
         Collection<Film> all = filmStorage.getAll();
         assertFalse(all.isEmpty());
         assertEquals(2, all.size());
@@ -159,10 +168,30 @@ class FilmoRateApplicationTests {
         Collection<Film> userFilms = filmStorage.getByUser(user.getId());
         assertTrue(userFilms.isEmpty());
 
-        Film film = filmStorage.save(new Film("test", LocalDate.now(), 100, ratingDbStorage.findById(1L)));
+        Film film = Film.builder()
+                .name("test").releaseDate(LocalDate.now()).duration(100).mpa(Rating.builder().id(1L).build()).build();
+        filmStorage.save(film);
         film.getWhoLikedUserIds().add(user.getId());
         filmStorage.update(film);
         userFilms = filmStorage.getByUser(user.getId());
         assertEquals(1, userFilms.size());
+
+        Film fromDb = filmStorage.get(film.getId()).orElse(null);
+        assertEquals(Set.of(user.getId()), fromDb.getWhoLikedUserIds());
+    }
+
+    @Test
+    void testCommonFilms() {
+        User user1 = userStorage.create(new User("test1@mail.com", "login1", LocalDate.now()));
+        User user2 = userStorage.create(new User("test2@mail.com", "login2", LocalDate.now()));
+        Film film = Film.builder()
+                .name("test").releaseDate(LocalDate.now()).duration(100).mpa(Rating.builder().id(1L).build()).build();
+        Film save = filmStorage.save(film);
+        save.getWhoLikedUserIds().add(user1.getId());
+        assertTrue(filmStorage.getCommon(user1.getId(), user2.getId()).isEmpty());
+
+        save.getWhoLikedUserIds().add(user2.getId());
+        filmStorage.update(save);
+        assertEquals(1, filmStorage.getCommon(user1.getId(), user2.getId()).size());
     }
 }

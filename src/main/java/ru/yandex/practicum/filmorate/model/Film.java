@@ -1,6 +1,9 @@
 package ru.yandex.practicum.filmorate.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import ru.yandex.practicum.filmorate.util.validation.MinDate;
 
 import javax.validation.constraints.NotBlank;
@@ -17,6 +20,8 @@ import static ru.yandex.practicum.filmorate.util.ValidationUtil.MAX_DESCRIPTION_
 import static ru.yandex.practicum.filmorate.util.ValidationUtil.MIN_FILM_RELEASE_DATE_STR;
 
 @Data
+@Builder
+@AllArgsConstructor
 public class Film {
     @NotBlank
     @NotNull
@@ -30,6 +35,8 @@ public class Film {
     private String description;
     private Long id;
     private final Rating mpa;
+    @EqualsAndHashCode.Exclude
     private final Set<Long> whoLikedUserIds = new HashSet<>();
+    @Builder.Default
     private final Set<Genre> genres = new TreeSet<>(Comparator.comparing(Genre::getId));
 }

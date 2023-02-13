@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.storage.film;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
+import java.util.Optional;
 
 public interface FilmStorage {
     Collection<Film> getAll();
@@ -11,7 +12,9 @@ public interface FilmStorage {
 
     Film update(Film film);
 
-    Film get(Long id);
+    Optional<Film> get(Long id);
 
     Collection<Film> getByUser(Long userId);
+
+    Collection<Film> getCommon(Long userId, Long friendId);
 }

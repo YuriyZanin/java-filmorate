@@ -4,8 +4,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.user.UserService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import ru.yandex.practicum.filmorate.util.exeption.NotFoundException;
 
 import java.util.Collection;
@@ -15,11 +15,11 @@ import java.util.stream.Collectors;
 public class FilmService {
 
     private final FilmStorage filmStorage;
-    private final UserStorage userStorage;
+    private final UserService userService;
 
-    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage, @Qualifier("userDbStorage") UserStorage userStorage) {
+    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage, UserService userService) {
         this.filmStorage = filmStorage;
-        this.userStorage = userStorage;
+        this.userService = userService;
     }
 
     public Collection<Film> getAll() {
@@ -41,14 +41,14 @@ public class FilmService {
     }
 
     public Film addLike(Long filmId, Long userId) {
-        User user = userStorage.get(userId);
+        User user = userService.get(userId);
         Film film = get(filmId);
         film.getWhoLikedUserIds().add(user.getId());
         return filmStorage.update(film);
     }
 
     public Film removeLike(Long filmId, Long userId) {
-        User user = userStorage.get(userId);
+        User user = userService.get(userId);
         Film film = get(filmId);
         film.getWhoLikedUserIds().remove(user.getId());
         return filmStorage.update(film);

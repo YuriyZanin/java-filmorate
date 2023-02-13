@@ -36,8 +36,9 @@ class FilmoRateApplicationTests {
 
     @Test
     void testFindUserById() {
-        userStorage.create(new User("test@mail.com", "login", LocalDate.now()));
-        Optional<User> userOptional = Optional.ofNullable(userStorage.get(1L));
+        User test = User.builder().email("test@mail.com").login("login").birthday(LocalDate.now()).build();
+        userStorage.create(test);
+        Optional<User> userOptional = userStorage.get(1L);
 
         assertThat(userOptional)
                 .isPresent()
@@ -48,8 +49,9 @@ class FilmoRateApplicationTests {
 
     @Test
     void testCreateUser() {
-        User created = userStorage.create(new User("test@mail.com", "login", LocalDate.now()));
-        Optional<User> userOptional = Optional.ofNullable(userStorage.get(1L));
+        User created = User.builder().email("test@mail.com").login("login").birthday(LocalDate.now()).build();
+        userStorage.create(created);
+        Optional<User> userOptional = userStorage.get(1L);
 
         assertThat(userOptional)
                 .isPresent()
@@ -58,7 +60,8 @@ class FilmoRateApplicationTests {
 
     @Test
     void testUpdateUser() {
-        User created = userStorage.create(new User("test@mail.com", "login", LocalDate.now()));
+        User created = User.builder().email("test@mail.com").login("login").birthday(LocalDate.now()).build();
+        userStorage.create(created);
         created.setName("updated name");
         User updated = userStorage.update(created);
 
@@ -69,8 +72,10 @@ class FilmoRateApplicationTests {
 
     @Test
     void testFindAllUsers() {
-        User user1 = userStorage.create(new User("test@mail.com", "login", LocalDate.now()));
-        User user2 = userStorage.create(new User("test2@mail.com", "login2", LocalDate.now()));
+        User user1 = User.builder().email("test1@mail.com").login("login1").birthday(LocalDate.now()).build();
+        User user2 = User.builder().email("test2@mail.com").login("login2").birthday(LocalDate.now()).build();
+        userStorage.create(user1);
+        userStorage.create(user2);
 
         Collection<User> all = userStorage.getAll();
         assertFalse(all.isEmpty());
@@ -164,7 +169,8 @@ class FilmoRateApplicationTests {
 
     @Test
     void testFindUserFilms() {
-        User user = userStorage.create(new User("test@mail.com", "login", LocalDate.now()));
+        User user = User.builder().email("test@mail.com").login("login").birthday(LocalDate.now()).build();
+        userStorage.create(user);
         Collection<Film> userFilms = filmStorage.getByUser(user.getId());
         assertTrue(userFilms.isEmpty());
 
@@ -182,8 +188,10 @@ class FilmoRateApplicationTests {
 
     @Test
     void testCommonFilms() {
-        User user1 = userStorage.create(new User("test1@mail.com", "login1", LocalDate.now()));
-        User user2 = userStorage.create(new User("test2@mail.com", "login2", LocalDate.now()));
+        User user1 = User.builder().email("test1@mail.com").login("login1").birthday(LocalDate.now()).build();
+        User user2 = User.builder().email("test2@mail.com").login("login2").birthday(LocalDate.now()).build();
+        userStorage.create(user1);
+        userStorage.create(user2);
         Film film = Film.builder()
                 .name("test").releaseDate(LocalDate.now()).duration(100).mpa(Rating.builder().id(1L).build()).build();
         Film save = filmStorage.save(film);

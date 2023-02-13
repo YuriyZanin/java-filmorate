@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.util.exeption.NotFoundException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -50,7 +51,7 @@ public class ImMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User get(Long id) {
+    public Optional<User> get(Long id) {
         User user = users.get(id);
         if (user == null) {
             String message = "Пользователь с id " + id + " не найден в базе";
@@ -58,6 +59,6 @@ public class ImMemoryUserStorage implements UserStorage {
             throw new NotFoundException(message);
         }
         log.info("Запрос пользователя {}", user);
-        return user;
+        return Optional.of(user);
     }
 }

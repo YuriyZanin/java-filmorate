@@ -13,67 +13,78 @@ public class UserValidationTest extends AbstractValidationTest {
 
     @Test
     void shouldBeSuccessValidation() {
-        Set<ConstraintViolation<User>> violations = validator.validate(new User("test@email.com", "test", LocalDate.now()));
+        User test = User.builder().email("test@email.com").login("test").birthday(LocalDate.now()).build();
+        Set<ConstraintViolation<User>> violations = validator.validate(test);
         assertTrue(violations.isEmpty());
     }
 
     @Test
     void shouldBeFailedIfEmailIsIncorrect() {
-        Set<ConstraintViolation<User>> violations = validator.validate(new User("incorrectMail@", "login", LocalDate.now()));
+        User test = User.builder().email("incorrectMail@").login("login").birthday(LocalDate.now()).build();
+        Set<ConstraintViolation<User>> violations = validator.validate(test);
         assertEquals(1, violations.size());
         assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("email")));
     }
 
     @Test
     void shouldBeFailedIfEmailIsNull() {
-        Set<ConstraintViolation<User>> violations = validator.validate(new User(null, "login", LocalDate.now()));
+        User test = User.builder().email(null).login("login").birthday(LocalDate.now()).build();
+        Set<ConstraintViolation<User>> violations = validator.validate(test);
         assertEquals(2, violations.size());
         assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("email")));
     }
 
     @Test
     void shouldBeFailedIfEmailIsEmpty() {
-        Set<ConstraintViolation<User>> violations = validator.validate(new User("", "login", LocalDate.now()));
+        User test = User.builder().email("").login("login").birthday(LocalDate.now()).build();
+        Set<ConstraintViolation<User>> violations = validator.validate(test);
         assertEquals(1, violations.size());
         assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("email")));
 
-        violations = validator.validate(new User("   ", "login", LocalDate.now()));
+        test = User.builder().email("   ").login("login").birthday(LocalDate.now()).build();
+        violations = validator.validate(test);
         assertEquals(2, violations.size());
         assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("email")));
     }
 
     @Test
     void shouldBeFailedIfLoginIsNull() {
-        Set<ConstraintViolation<User>> violations = validator.validate(new User("test@mail.com", null, LocalDate.now()));
+        User test = User.builder().email("test@mail.com").login(null).birthday(LocalDate.now()).build();
+        Set<ConstraintViolation<User>> violations = validator.validate(test);
         assertEquals(1, violations.size());
         assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("login")));
     }
 
     @Test
     void shouldBeFailedIfLoginWithSpaces() {
-        Set<ConstraintViolation<User>> violations = validator.validate(new User("test@mail.com", "a b", LocalDate.now()));
+        User test = User.builder().email("test@mail.com").login("a b").birthday(LocalDate.now()).build();
+        Set<ConstraintViolation<User>> violations = validator.validate(test);
         assertEquals(1, violations.size());
         assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("login")));
 
-        violations = validator.validate(new User("test@mail.com", " ab ", LocalDate.now()));
+        test = User.builder().email("test@mail.com").login(" ab ").birthday(LocalDate.now()).build();
+        violations = validator.validate(test);
         assertEquals(1, violations.size());
         assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("login")));
 
-        violations = validator.validate(new User("test@mail.com", "   ", LocalDate.now()));
+        test = User.builder().email("test@mail.com").login("  ").birthday(LocalDate.now()).build();
+        violations = validator.validate(test);
         assertEquals(1, violations.size());
         assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("login")));
     }
 
     @Test
     void shouldBeFailedIfLoginIsEmpty() {
-        Set<ConstraintViolation<User>> violations = validator.validate(new User("test@email.com", "", LocalDate.now()));
+        User test = User.builder().email("test@mail.com").login("").birthday(LocalDate.now()).build();
+        Set<ConstraintViolation<User>> violations = validator.validate(test);
         assertEquals(1, violations.size());
     }
 
     @Test
     void shouldBeFailedIfBirthDayIsFuture() {
+        User test = User.builder().email("test@mail.com").login("login").birthday(LocalDate.now().plusDays(1)).build();
         Set<ConstraintViolation<User>> violations =
-                validator.validate(new User("test@mail.com", "login", LocalDate.now().plusDays(1)));
+                validator.validate(test);
         assertEquals(1, violations.size());
         assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("birthday")));
     }

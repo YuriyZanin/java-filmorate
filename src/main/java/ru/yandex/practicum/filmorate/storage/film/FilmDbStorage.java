@@ -143,12 +143,14 @@ public class FilmDbStorage implements FilmStorage {
             }
         }
 
-        if (!film.getWhoLikedUserIds().isEmpty()) {
+        if (film.getWhoLikedUserIds() != null && !film.getWhoLikedUserIds().isEmpty()) {
             for (Long userId : film.getWhoLikedUserIds()) {
-                jdbcTemplate.update("INSERT INTO film_who_liked_users(film_id, who_liked_user_id)" +
-                                "VALUES (?,?)",
-                        film.getId(),
-                        userId);
+                if (userId != null) {
+                    jdbcTemplate.update("INSERT INTO film_who_liked_users(film_id, who_liked_user_id)" +
+                                    "VALUES (?,?)",
+                            film.getId(),
+                            userId);
+                }
             }
         }
     }

@@ -2,19 +2,21 @@ package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.user.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.util.exeption.NotFoundException;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Objects;
+import java.util.Optional;
 
 @Component
 @Qualifier("userDbStorage")
@@ -27,26 +29,13 @@ public class UserDbStorage implements UserStorage {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    public static final String ALL_USERS_QUERY = "SELECT u.*, array_agg(f.friend_id) as friends_ids FROM users u\n" +
+            "LEFT JOIN friendships f on f.user_id = u.id\n";
+
     @Override
     public Collection<User> getAll() {
-        String sqlQuery = "SELECT * FROM users";
-
-        Map<Long, Set<Long>> userFriends = new HashMap<>();
-        jdbcTemplate.query("SELECT * FROM friendships", (rs -> {
-            long userId = rs.getLong("user_id");
-            long friendId = rs.getLong("friend_id");
-            userFriends.putIfAbsent(userId, new HashSet<>());
-            userFriends.get(userId).add(friendId);
-        }));
-
-        List<User> users = jdbcTemplate.query(sqlQuery, ((rs, rowNum) -> makeUser(rs)));
-        users.forEach(user -> {
-            Set<Long> friendIds = userFriends.get(user.getId());
-            if (friendIds != null) {
-                user.getFriendIds().addAll(friendIds);
-            }
-        });
-        return users;
+        SqlRowSet rowSet = jdbcTemplate.queryForRowSet(ALL_USERS_QUERY + "GROUP BY u.id");
+        return UserMapper.makeUserList(rowSet);
     }
 
     @Override
@@ -69,7 +58,7 @@ public class UserDbStorage implements UserStorage {
         updateFriends(user);
         log.info("Пользователь {} создан с идентификатором {}", user.getEmail(), userId);
 
-        return get(userId);
+        return user;
     }
 
     @Override
@@ -90,50 +79,24 @@ public class UserDbStorage implements UserStorage {
 
         updateFriends(user);
         log.info("Пользователь {} обновлен", user.getEmail());
-        return get(user.getId());
+        return user;
     }
 
     @Override
-    public User get(Long id) {
-        Set<Long> friendIds = new HashSet<>();
-        jdbcTemplate.query("SELECT * FROM friendships WHERE user_id = ?", (rs -> {
-            long friend_id = rs.getLong("friend_id");
-            friendIds.add(friend_id);
-        }), id);
-
-        SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet("SELECT * FROM users WHERE id = ?", id);
-        if (sqlRowSet.next()) {
-            User user = new User(
-                    sqlRowSet.getString("email"),
-                    sqlRowSet.getString("login"),
-                    Objects.requireNonNull(sqlRowSet.getDate("birthday")).toLocalDate());
-
-            user.setId(sqlRowSet.getLong("id"));
-            user.setName(sqlRowSet.getString("name"));
-            user.getFriendIds().addAll(friendIds);
-
-            log.info("Найден пользователь: {} {}", user.getId(), user.getEmail());
-            return user;
-        } else {
-            String message = "Пользователь с идентификатором " + id + " не найден.";
-            log.info(message);
-            throw new NotFoundException(message);
+    public Optional<User> get(Long id) {
+        String query = ALL_USERS_QUERY + "WHERE u.id = ? \n GROUP BY u.id";
+        try{
+            SqlRowSet rowSet = jdbcTemplate.queryForRowSet(query, id);
+            return UserMapper.makeUserList(rowSet).stream().findAny();
+        } catch (EmptyResultDataAccessException e){
+            return Optional.empty();
         }
-    }
-
-    private User makeUser(ResultSet rs) throws SQLException {
-        User user = new User(rs.getString("email"),
-                rs.getString("login"),
-                rs.getDate("birthday").toLocalDate());
-        user.setName(rs.getString("name"));
-        user.setId(rs.getLong("id"));
-        return user;
     }
 
     private void updateFriends(User user) {
         jdbcTemplate.update("DELETE FROM friendships WHERE user_id = ?", user.getId());
 
-        if (!user.getFriendIds().isEmpty()) {
+        if (user.getFriendIds() != null && !user.getFriendIds().isEmpty()) {
             for (Long friendId : user.getFriendIds()) {
                 jdbcTemplate.update("INSERT INTO friendships(user_id, friend_id)" +
                                 "VALUES (?,?)",

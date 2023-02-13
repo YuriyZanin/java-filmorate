@@ -85,12 +85,23 @@ public class UserDbStorage implements UserStorage {
     @Override
     public Optional<User> get(Long id) {
         String query = ALL_USERS_QUERY + "WHERE u.id = ? \n GROUP BY u.id";
-        try{
+        try {
             SqlRowSet rowSet = jdbcTemplate.queryForRowSet(query, id);
             return UserMapper.makeUserList(rowSet).stream().findAny();
-        } catch (EmptyResultDataAccessException e){
+        } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public Collection<User> getCommonFriends(Long userId, Long otherId) {
+        String query = ALL_USERS_QUERY +
+                "WHERE u.id IN (SELECT fr1.friend_id FROM friendships fr1 where fr1.user_id = ?\n" +
+                "INTERSECT\n" +
+                "SELECT fr2.friend_id FROM friendships fr2 WHERE fr2.user_id = ?)\n" +
+                "GROUP BY u.id";
+        SqlRowSet rowSet = jdbcTemplate.queryForRowSet(query, userId, otherId);
+        return UserMapper.makeUserList(rowSet);
     }
 
     private void updateFriends(User user) {

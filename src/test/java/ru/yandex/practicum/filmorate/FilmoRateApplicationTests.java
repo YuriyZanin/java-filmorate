@@ -202,4 +202,14 @@ class FilmoRateApplicationTests {
         filmStorage.update(save);
         assertEquals(1, filmStorage.getCommon(user1.getId(), user2.getId()).size());
     }
+
+    @Test
+    void testCommonFriends() {
+        User user1 = User.builder().email("test1@mail.com").login("login1").birthday(LocalDate.now()).build();
+        User user2 = User.builder().email("test2@mail.com").login("login2").birthday(LocalDate.now()).build();
+        userStorage.create(user1);
+        userStorage.create(user2);
+        Collection<User> commonFriends = userStorage.getCommonFriends(user1.getId(), user2.getId());
+        assertTrue(commonFriends.isEmpty());
+    }
 }

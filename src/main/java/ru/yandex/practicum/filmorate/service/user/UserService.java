@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import ru.yandex.practicum.filmorate.util.exeption.NotFoundException;
 
 import java.util.Collection;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -76,14 +75,7 @@ public class UserService {
     }
 
     public Collection<User> getCommonFriends(Long userId, Long otherId) {
-        User user = get(userId);
-        User other = get(otherId);
-        Set<Long> userFriends = user.getFriendIds();
-        Set<Long> otherFriends = other.getFriendIds();
-        return userFriends.stream()
-                .filter(otherFriends::contains)
-                .map(this::get)
-                .collect(Collectors.toList());
+        return userStorage.getCommonFriends(userId, otherId);
     }
 
     private void prepareUser(User user) {

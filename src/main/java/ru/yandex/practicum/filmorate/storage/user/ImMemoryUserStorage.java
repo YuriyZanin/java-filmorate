@@ -61,4 +61,9 @@ public class ImMemoryUserStorage implements UserStorage {
         log.info("Запрос пользователя {}", user);
         return Optional.of(user);
     }
+
+    @Override
+    public Collection<User> getCommonFriends(Long userId, Long otherId) {
+        return null;
+    }
 }

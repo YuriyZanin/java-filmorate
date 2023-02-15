@@ -6,13 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Rating;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.RatingDbStorage;
+import ru.yandex.practicum.filmorate.storage.review.ReviewDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 
 import java.time.LocalDate;
@@ -33,6 +31,7 @@ class FilmoRateApplicationTests {
     private final FilmDbStorage filmStorage;
     private final GenreDbStorage genreDbStorage;
     private final RatingDbStorage ratingDbStorage;
+    private final ReviewDbStorage reviewDbStorage;
 
     @Test
     void testFindUserById() {
@@ -42,9 +41,7 @@ class FilmoRateApplicationTests {
 
         assertThat(userOptional)
                 .isPresent()
-                .hasValueSatisfying(user ->
-                        assertThat(user).hasFieldOrPropertyWithValue("id", 1L)
-                );
+                .hasValueSatisfying(user -> assertThat(user).hasFieldOrPropertyWithValue("id", 1L));
     }
 
     @Test
@@ -156,8 +153,7 @@ class FilmoRateApplicationTests {
         Optional<Rating> optionalRating = Optional.of(ratingDbStorage.findById(1L));
         assertThat(optionalRating)
                 .isPresent()
-                .hasValueSatisfying(rating ->
-                        assertThat(rating).hasFieldOrPropertyWithValue("id", 1L));
+                .hasValueSatisfying(rating -> assertThat(rating).hasFieldOrPropertyWithValue("id", 1L));
     }
 
     @Test
@@ -211,5 +207,158 @@ class FilmoRateApplicationTests {
         userStorage.create(user2);
         Collection<User> commonFriends = userStorage.getCommonFriends(user1.getId(), user2.getId());
         assertTrue(commonFriends.isEmpty());
+    }
+
+    @Test
+    void testCreateReview() {
+        User user = userStorage.create(
+                User.builder().email("test1@mail.com").login("login1").birthday(LocalDate.now()).build());
+        Film film = filmStorage.save(
+                Film.builder().name("test1")
+                        .releaseDate(LocalDate.now()).duration(100).mpa(ratingDbStorage.findById(1L)).build());
+        Review review = reviewDbStorage.create(
+                Review.builder().content("test").user(user).film(film).isPositive(true).build());
+
+        Optional<Review> userOptional = reviewDbStorage.get(review.getId());
+
+        assertThat(userOptional)
+                .isPresent()
+                .hasValue(review);
+    }
+
+    @Test
+    void testUpdateReview() {
+        User user = userStorage.create(
+                User.builder().email("test1@mail.com").login("login1").birthday(LocalDate.now()).build());
+        Film film = filmStorage.save(
+                Film.builder().name("test1")
+                        .releaseDate(LocalDate.now()).duration(100).mpa(ratingDbStorage.findById(1L)).build());
+        Review review = reviewDbStorage.create(
+                Review.builder().content("test").user(user).film(film).isPositive(true).build());
+
+        review.setContent("update content");
+        review.setIsPositive(false);
+        Review updated = reviewDbStorage.update(review);
+
+        assertThat(updated)
+                .isEqualTo(review)
+                .hasFieldOrPropertyWithValue("content", "update content")
+                .hasFieldOrPropertyWithValue("isPositive", false);
+    }
+
+    @Test
+    void testFindReviewByFilm() {
+        User user = userStorage.create(
+                User.builder().email("test1@mail.com").login("login1").birthday(LocalDate.now()).build());
+        Film film = filmStorage.save(
+                Film.builder().name("test1")
+                        .releaseDate(LocalDate.now()).duration(100).mpa(ratingDbStorage.findById(1L)).build());
+        Review review = reviewDbStorage.create(
+                Review.builder().content("test").user(user).film(film).isPositive(true).build());
+
+        Collection<Review> byFilm = reviewDbStorage.getByFilm(1L, 1);
+
+        assertThat(byFilm)
+                .hasSize(1)
+                .contains(review);
+    }
+
+    @Test
+    void testFindReviewByDefault() {
+        User user = userStorage.create(
+                User.builder().email("test1@mail.com").login("login1").birthday(LocalDate.now()).build());
+        Film film = filmStorage.save(
+                Film.builder().name("test1")
+                        .releaseDate(LocalDate.now()).duration(100).mpa(ratingDbStorage.findById(1L)).build());
+        Review review = reviewDbStorage.create(
+                Review.builder().content("test").user(user).film(film).isPositive(true).build());
+
+        Collection<Review> byFilmOrDefault = reviewDbStorage.getAllWithLimit(1);
+
+        assertThat(byFilmOrDefault)
+                .hasSize(1)
+                .contains(review);
+    }
+
+    @Test
+    void testDeleteReviewById() {
+        User user = userStorage.create(
+                User.builder().email("test1@mail.com").login("login1").birthday(LocalDate.now()).build());
+        Film film = filmStorage.save(
+                Film.builder().name("test1")
+                        .releaseDate(LocalDate.now()).duration(100).mpa(ratingDbStorage.findById(1L)).build());
+        Review review = reviewDbStorage.create(
+                Review.builder().content("test").user(user).film(film).isPositive(true).build());
+
+        assertThat(review)
+                .isNotNull();
+
+        reviewDbStorage.delete(review.getId());
+        Optional<Review> mustBeEmpty = reviewDbStorage.get(review.getId());
+
+        assertThat(mustBeEmpty)
+                .isEmpty();
+    }
+
+    @Test
+    void testAddAndRemoveLikeToReview() {
+        User user = userStorage.create(
+                User.builder().email("test1@mail.com").login("login1").birthday(LocalDate.now()).build());
+        Film film = filmStorage.save(
+                Film.builder().name("test1")
+                        .releaseDate(LocalDate.now()).duration(100).mpa(ratingDbStorage.findById(1L)).build());
+        Review review = reviewDbStorage.create(
+                Review.builder().content("test").user(user).film(film).isPositive(true).build());
+
+        boolean isAdded = reviewDbStorage.addLike(review.getId(), user.getId());
+        assertTrue(isAdded);
+
+        Optional<Review> afterSave = reviewDbStorage.get(review.getId());
+        assertThat(afterSave)
+                .isPresent()
+                .hasValueSatisfying(r -> assertThat(r).hasFieldOrPropertyWithValue("useful", 1));
+
+        boolean isRemoved = reviewDbStorage.removeLike(review.getId(), user.getId());
+        assertTrue(isRemoved);
+
+        afterSave = reviewDbStorage.get(review.getId());
+        assertThat(afterSave)
+                .isPresent()
+                .hasValueSatisfying(r -> assertThat(r).hasFieldOrPropertyWithValue("useful", 0));
+
+        isRemoved = reviewDbStorage.removeLike(review.getId(), user.getId());
+        assertFalse(isRemoved);
+
+        afterSave = reviewDbStorage.get(review.getId());
+        assertThat(afterSave)
+                .isPresent()
+                .hasValueSatisfying(r -> assertThat(r).hasFieldOrPropertyWithValue("useful", 0));
+    }
+
+    @Test
+    void testAddAndRemoveDislikeToReview() {
+        User user = userStorage.create(
+                User.builder().email("test1@mail.com").login("login1").birthday(LocalDate.now()).build());
+        Film film = filmStorage.save(
+                Film.builder().name("test1")
+                        .releaseDate(LocalDate.now()).duration(100).mpa(ratingDbStorage.findById(1L)).build());
+        Review review = reviewDbStorage.create(
+                Review.builder().content("test").user(user).film(film).isPositive(true).build());
+
+        boolean isAdded = reviewDbStorage.addDislike(review.getId(), user.getId());
+        assertTrue(isAdded);
+
+        Optional<Review> afterSave = reviewDbStorage.get(review.getId());
+        assertThat(afterSave)
+                .isPresent()
+                .hasValueSatisfying(r -> assertThat(r).hasFieldOrPropertyWithValue("useful", -1));
+
+        boolean isRemoved = reviewDbStorage.removeDislike(review.getId(), user.getId());
+        assertTrue(isRemoved);
+
+        afterSave = reviewDbStorage.get(review.getId());
+        assertThat(afterSave)
+                .isPresent()
+                .hasValueSatisfying(r -> assertThat(r).hasFieldOrPropertyWithValue("useful", 0));
     }
 }

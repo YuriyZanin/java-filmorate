@@ -4,37 +4,33 @@ import org.springframework.jdbc.support.rowset.SqlRowSet;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Rating;
+import ru.yandex.practicum.filmorate.model.dto.FilmDto;
 import ru.yandex.practicum.filmorate.util.exeption.ValidationException;
 
 import javax.sql.rowset.serial.SerialArray;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.util.*;
 
 public class FilmMapper {
     public static List<Film> makeFilmList(SqlRowSet rs) {
         List<Film> films = new LinkedList<>();
         while (rs.next()) {
-            Long filmId = rs.getLong("FILM_ID");
-            String filmName = rs.getString("FILM_NAME");
-            LocalDate releaseDate = rs.getDate("RELEASE_DATE").toLocalDate();
-            int duration = rs.getInt("DURATION");
-            String description = rs.getString("DESCRIPTION");
-            Rating rating = makeRating(rs);
-
-            Film film = Film.builder()
-                    .id(filmId)
-                    .name(filmName)
-                    .releaseDate(releaseDate)
-                    .duration(duration)
-                    .mpa(rating)
-                    .description(description)
-                    .build();
-            film.getWhoLikedUserIds().addAll(makeWhoLikedUsers(rs));
-            film.getGenres().addAll(makeGenres(rs));
-            films.add(film);
+            films.add(makeFilm(rs));
         }
         return films;
+    }
+
+    public static Film makeFilm(SqlRowSet rs) {
+        return Film.builder()
+                .id(rs.getLong("FILM_ID"))
+                .name(rs.getString("FILM_NAME"))
+                .releaseDate(rs.getDate("RELEASE_DATE").toLocalDate())
+                .duration(rs.getInt("DURATION"))
+                .description(rs.getString("DESCRIPTION"))
+                .mpa(makeRating(rs))
+                .whoLikedUserIds(makeWhoLikedUsers(rs))
+                .genres(makeGenres(rs))
+                .build();
     }
 
     public static Rating makeRating(SqlRowSet rs) {
@@ -79,5 +75,31 @@ public class FilmMapper {
             throw new ValidationException("Ошибка преобразования жанров");
         }
         return genres;
+    }
+
+    public static Film toFilm(FilmDto filmDto) {
+        return Film.builder()
+                .id(filmDto.getId())
+                .name(filmDto.getName())
+                .releaseDate(filmDto.getReleaseDate())
+                .duration(filmDto.getDuration())
+                .description(filmDto.getDescription())
+                .mpa(filmDto.getMpa())
+                .whoLikedUserIds(filmDto.getWhoLikedUserIds() != null ? filmDto.getWhoLikedUserIds() : new HashSet<>())
+                .genres(filmDto.getGenres())
+                .build();
+    }
+
+    public static FilmDto toFilmDto(Film film) {
+        return FilmDto.builder()
+                .id(film.getId())
+                .name(film.getName())
+                .releaseDate(film.getReleaseDate())
+                .duration(film.getDuration())
+                .description(film.getDescription())
+                .mpa(film.getMpa())
+                .whoLikedUserIds(film.getWhoLikedUserIds())
+                .genres(film.getGenres())
+                .build();
     }
 }

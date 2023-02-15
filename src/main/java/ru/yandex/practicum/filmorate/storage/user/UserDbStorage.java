@@ -29,7 +29,14 @@ public class UserDbStorage implements UserStorage {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public static final String ALL_USERS_QUERY = "SELECT u.*, array_agg(f.friend_id) as friends_ids FROM users u\n" +
+    public static final String ALL_USERS_QUERY = "SELECT " +
+            "u.id as user_id, " +
+            "u.name as user_name, " +
+            "u.birthday, " +
+            "u.login, " +
+            "u.email, " +
+            "array_agg(f.friend_id) as friends_ids\n" +
+            "FROM users u\n" +
             "LEFT JOIN friendships f on f.user_id = u.id\n";
 
     @Override

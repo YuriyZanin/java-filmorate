@@ -5,6 +5,8 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.model.dto.ReviewDto;
+import ru.yandex.practicum.filmorate.storage.film.mapper.FilmMapper;
+import ru.yandex.practicum.filmorate.storage.user.mapper.UserMapper;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -21,8 +23,8 @@ public class ReviewMapper {
     public static Review makeReview(SqlRowSet rs) {
         return Review.builder()
                 .id(rs.getLong("ID"))
-                .user(User.builder().id(rs.getLong("USER_ID")).build())
-                .film(Film.builder().id(rs.getLong("FILM_ID")).build())
+                .user(UserMapper.makeUser(rs))
+                .film(FilmMapper.makeFilm(rs))
                 .content(rs.getString("CONTENT"))
                 .isPositive(rs.getBoolean("IS_POSITIVE"))
                 .useful(rs.getInt("USEFUL"))

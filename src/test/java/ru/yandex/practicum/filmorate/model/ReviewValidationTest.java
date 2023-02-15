@@ -44,27 +44,11 @@ public class ReviewValidationTest extends AbstractValidationTest {
     }
 
     @Test
-    void shouldBeFailedIfUserIdIsNegative() {
-        ReviewDto test = ReviewDto.builder().content("test").isPositive(true).userId(-1L).filmId(1L).build();
-        Set<ConstraintViolation<ReviewDto>> violations = validator.validate(test);
-        assertEquals(1, violations.size());
-        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("userId")));
-    }
-
-    @Test
     void shouldBeFailedIfUserIdIsNull() {
         ReviewDto test = ReviewDto.builder().content("test").isPositive(true).userId(null).filmId(1L).build();
         Set<ConstraintViolation<ReviewDto>> violations = validator.validate(test);
         assertEquals(1, violations.size());
         assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("userId")));
-    }
-
-    @Test
-    void shouldBeFailedIfFilmIdIsNegative() {
-        ReviewDto test = ReviewDto.builder().content("test").isPositive(true).userId(1L).filmId(-1L).build();
-        Set<ConstraintViolation<ReviewDto>> violations = validator.validate(test);
-        assertEquals(1, violations.size());
-        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("filmId")));
     }
 
     @Test

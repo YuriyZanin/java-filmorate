@@ -22,10 +22,32 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ReviewDbStorage implements ReviewStorage {
     public static final String REVIEWS_QUERY =
-            "SELECT r.*,\n" +
-                    "(CASE WHEN likes_count IS NOT NULL THEN likes_count ELSE 0 END - \n" +
-                    "CASE WHEN dislikes_count IS NOT NULL THEN dislikes_count ELSE 0 END) AS useful \n" +
-                    "FROM reviews r\n" +
+            "        SELECT r.*,\n" +
+                    "           u.id as user_id, \n" +
+                    "           u.name as user_name, \n" +
+                    "           u.birthday, \n" +
+                    "           u.login, \n" +
+                    "           u.email, \n" +
+                    "           array_agg(fr.friend_id) as friends_ids, \n" +
+                    "           (CASE WHEN likes_count IS NOT NULL THEN likes_count ELSE 0 END - \n" +
+                    "           CASE WHEN dislikes_count IS NOT NULL THEN dislikes_count ELSE 0 END) AS useful, \n" +
+                    "           f.name AS film_name,\n" +
+                    "           f.release_date,\n" +
+                    "           f.duration,\n" +
+                    "           f.description,\n" +
+                    "           f.rating_id,\n" +
+                    "           rt.name AS rating_name,\n" +
+                    "           array_agg(genre_id) AS genre_ids,\n" +
+                    "           array_agg(g.name) AS genre_names,\n" +
+                    "           array_agg(fwlu.who_liked_user_id) AS who_liked_users_ids\n" +
+                    "FROM reviews r \n" +
+                    "INNER JOIN users u ON u.id = r.user_id\n" +
+                    "LEFT JOIN friendships fr ON fr.user_id = u.id\n" +
+                    "INNER JOIN films f ON f.id = r.film_id\n" +
+                    "INNER JOIN ratings rt ON rt.id = f.rating_id\n" +
+                    "LEFT JOIN film_genres fg ON fg.film_id = f.id\n" +
+                    "LEFT JOIN genres g ON g.id = fg.genre_id\n" +
+                    "LEFT JOIN film_who_liked_users fwlu ON fwlu.film_id = f.id\n" +
                     "LEFT JOIN (SELECT lr.review_id, COUNT(lr.user_id) AS likes_count\n" +
                     "           FROM review_ratings lr WHERE lr.is_like = true\n" +
                     "           GROUP BY lr.review_id) AS likes ON likes.review_id = r.id\n" +
@@ -34,6 +56,7 @@ public class ReviewDbStorage implements ReviewStorage {
                     "           GROUP BY dr.review_id) AS dislikes ON dislikes.review_id = r.id\n" +
                     "GROUP BY r.id\n" +
                     "ORDER BY useful DESC\n";
+
     private final JdbcTemplate jdbcTemplate;
 
     @Override
@@ -43,7 +66,7 @@ public class ReviewDbStorage implements ReviewStorage {
                 .usingGeneratedKeyColumns("id");
         try {
             Long reviewId = simpleJdbcInsert.executeAndReturnKey(reviewToParameters(review)).longValue();
-            log.info("Отзыв пользователя {} создан с id {}", review.getUser().getName(), reviewId);
+            log.info("Отзыв пользователя {} создан с id {}", review.getUser().getId(), reviewId);
             review.setId(reviewId);
             return review;
         } catch (DataIntegrityViolationException e) {

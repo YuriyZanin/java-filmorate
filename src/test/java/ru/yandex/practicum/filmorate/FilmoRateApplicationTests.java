@@ -68,6 +68,21 @@ class FilmoRateApplicationTests {
     }
 
     @Test
+    void testDeleteUser() {
+        User created = userStorage.create(
+                User.builder().email("test@mail.com").login("login").birthday(LocalDate.now()).build());
+        Optional<User> fromDb = userStorage.get(created.getId());
+        assertThat(fromDb)
+                .isPresent()
+                .hasValue(created);
+
+        userStorage.delete(created.getId());
+        fromDb = userStorage.get(created.getId());
+        assertThat(fromDb)
+                .isNotPresent();
+    }
+
+    @Test
     void testFindAllUsers() {
         User user1 = User.builder().email("test1@mail.com").login("login1").birthday(LocalDate.now()).build();
         User user2 = User.builder().email("test2@mail.com").login("login2").birthday(LocalDate.now()).build();
@@ -84,7 +99,7 @@ class FilmoRateApplicationTests {
     void testFindFilmById() {
         Film test = Film.builder().name("test").releaseDate(LocalDate.now()).duration(100).mpa(Rating.builder().id(1L)
                 .build()).build();
-        filmStorage.save(test);
+        filmStorage.create(test);
         Optional<Film> filmOptional = filmStorage.get(1L);
 
         assertThat(filmOptional)
@@ -98,7 +113,7 @@ class FilmoRateApplicationTests {
         Film created = Film.builder()
                 .name("test").releaseDate(LocalDate.now()).duration(100).mpa(ratingDbStorage.findById(1L)).build();
         created.getGenres().add(genreDbStorage.findById(1L));
-        filmStorage.save(created);
+        filmStorage.create(created);
         Optional<Film> filmOptional = filmStorage.get(1L);
 
         assertThat(filmOptional)
@@ -110,7 +125,7 @@ class FilmoRateApplicationTests {
     void testUpdateFilm() {
         Film created = Film.builder()
                 .name("test").releaseDate(LocalDate.now()).duration(100).mpa(Rating.builder().id(1L).build()).build();
-        filmStorage.save(created);
+        filmStorage.create(created);
         created.getGenres().add(genreDbStorage.findById(1L));
         created.setDescription("updated description");
         Film updated = filmStorage.update(created);
@@ -121,11 +136,26 @@ class FilmoRateApplicationTests {
     }
 
     @Test
+    void testDeleteFilm() {
+        Film created = filmStorage.create(Film.builder()
+                .name("test").releaseDate(LocalDate.now()).duration(100).mpa(ratingDbStorage.findById(1L)).build());
+        Optional<Film> fromDb = filmStorage.get(created.getId());
+        assertThat(fromDb)
+                .isPresent()
+                .hasValue(created);
+
+        filmStorage.delete(created.getId());
+        fromDb = filmStorage.get(created.getId());
+        assertThat(fromDb)
+                .isNotPresent();
+    }
+
+    @Test
     void testFindAllFilms() {
         Film test1 = Film.builder().name("test1").releaseDate(LocalDate.now()).duration(100).mpa(ratingDbStorage.findById(1L)).build();
         Film test2 = Film.builder().name("test2").releaseDate(LocalDate.now()).duration(90).mpa(ratingDbStorage.findById(2L)).build();
-        filmStorage.save(test1);
-        filmStorage.save(test2);
+        filmStorage.create(test1);
+        filmStorage.create(test2);
         Collection<Film> all = filmStorage.getAll();
         assertFalse(all.isEmpty());
         assertEquals(2, all.size());
@@ -172,7 +202,7 @@ class FilmoRateApplicationTests {
 
         Film film = Film.builder()
                 .name("test").releaseDate(LocalDate.now()).duration(100).mpa(Rating.builder().id(1L).build()).build();
-        filmStorage.save(film);
+        filmStorage.create(film);
         film.getWhoLikedUserIds().add(user.getId());
         filmStorage.update(film);
         userFilms = filmStorage.getByUser(user.getId());
@@ -190,7 +220,7 @@ class FilmoRateApplicationTests {
         userStorage.create(user2);
         Film film = Film.builder()
                 .name("test").releaseDate(LocalDate.now()).duration(100).mpa(Rating.builder().id(1L).build()).build();
-        Film save = filmStorage.save(film);
+        Film save = filmStorage.create(film);
         save.getWhoLikedUserIds().add(user1.getId());
         assertTrue(filmStorage.getCommon(user1.getId(), user2.getId()).isEmpty());
 
@@ -213,7 +243,7 @@ class FilmoRateApplicationTests {
     void testCreateReview() {
         User user = userStorage.create(
                 User.builder().email("test1@mail.com").login("login1").birthday(LocalDate.now()).build());
-        Film film = filmStorage.save(
+        Film film = filmStorage.create(
                 Film.builder().name("test1")
                         .releaseDate(LocalDate.now()).duration(100).mpa(ratingDbStorage.findById(1L)).build());
         Review review = reviewDbStorage.create(
@@ -230,7 +260,7 @@ class FilmoRateApplicationTests {
     void testUpdateReview() {
         User user = userStorage.create(
                 User.builder().email("test1@mail.com").login("login1").birthday(LocalDate.now()).build());
-        Film film = filmStorage.save(
+        Film film = filmStorage.create(
                 Film.builder().name("test1")
                         .releaseDate(LocalDate.now()).duration(100).mpa(ratingDbStorage.findById(1L)).build());
         Review review = reviewDbStorage.create(
@@ -250,7 +280,7 @@ class FilmoRateApplicationTests {
     void testFindReviewByFilm() {
         User user = userStorage.create(
                 User.builder().email("test1@mail.com").login("login1").birthday(LocalDate.now()).build());
-        Film film = filmStorage.save(
+        Film film = filmStorage.create(
                 Film.builder().name("test1")
                         .releaseDate(LocalDate.now()).duration(100).mpa(ratingDbStorage.findById(1L)).build());
         Review review = reviewDbStorage.create(
@@ -267,7 +297,7 @@ class FilmoRateApplicationTests {
     void testFindReviewByDefault() {
         User user = userStorage.create(
                 User.builder().email("test1@mail.com").login("login1").birthday(LocalDate.now()).build());
-        Film film = filmStorage.save(
+        Film film = filmStorage.create(
                 Film.builder().name("test1")
                         .releaseDate(LocalDate.now()).duration(100).mpa(ratingDbStorage.findById(1L)).build());
         Review review = reviewDbStorage.create(
@@ -284,7 +314,7 @@ class FilmoRateApplicationTests {
     void testDeleteReviewById() {
         User user = userStorage.create(
                 User.builder().email("test1@mail.com").login("login1").birthday(LocalDate.now()).build());
-        Film film = filmStorage.save(
+        Film film = filmStorage.create(
                 Film.builder().name("test1")
                         .releaseDate(LocalDate.now()).duration(100).mpa(ratingDbStorage.findById(1L)).build());
         Review review = reviewDbStorage.create(
@@ -304,7 +334,7 @@ class FilmoRateApplicationTests {
     void testAddAndRemoveLikeToReview() {
         User user = userStorage.create(
                 User.builder().email("test1@mail.com").login("login1").birthday(LocalDate.now()).build());
-        Film film = filmStorage.save(
+        Film film = filmStorage.create(
                 Film.builder().name("test1")
                         .releaseDate(LocalDate.now()).duration(100).mpa(ratingDbStorage.findById(1L)).build());
         Review review = reviewDbStorage.create(
@@ -339,7 +369,7 @@ class FilmoRateApplicationTests {
     void testAddAndRemoveDislikeToReview() {
         User user = userStorage.create(
                 User.builder().email("test1@mail.com").login("login1").birthday(LocalDate.now()).build());
-        Film film = filmStorage.save(
+        Film film = filmStorage.create(
                 Film.builder().name("test1")
                         .releaseDate(LocalDate.now()).duration(100).mpa(ratingDbStorage.findById(1L)).build());
         Review review = reviewDbStorage.create(

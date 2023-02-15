@@ -24,7 +24,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film save(Film film) {
+    public Film create(Film film) {
         if (film.getId() == null) {
             film.setId(++nextId);
         }
@@ -69,5 +69,10 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Collection<Film> getCommon(Long userId, Long friendId) {
         return null;
+    }
+
+    @Override
+    public void delete(Long id) {
+        films.remove(id);
     }
 }

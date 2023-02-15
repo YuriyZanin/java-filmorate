@@ -66,4 +66,9 @@ public class ImMemoryUserStorage implements UserStorage {
     public Collection<User> getCommonFriends(Long userId, Long otherId) {
         return null;
     }
+
+    @Override
+    public void delete(Long id) {
+        users.remove(id);
+    }
 }

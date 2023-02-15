@@ -51,7 +51,7 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public Film save(Film film) {
+    public Film create(Film film) {
         String sqlQuery = "INSERT INTO films(duration, description, name, release_date, rating_id) " +
                 "VALUES (?, ?, ?, ?, ?)";
 
@@ -119,6 +119,12 @@ public class FilmDbStorage implements FilmStorage {
         return FilmMapper.makeFilmList(rowSet);
     }
 
+    @Override
+    public void delete(Long id) {
+        jdbcTemplate.update("DELETE FROM films WHERE id = ?", id);
+    }
+
+    @Override
     public Collection<Film> getCommon(Long userId, Long friendId) {
         SqlRowSet rowSet = jdbcTemplate.queryForRowSet(
                 ALL_FILMS_QUERY +

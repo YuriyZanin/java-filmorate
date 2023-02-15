@@ -16,4 +16,6 @@ public interface UserStorage {
     Optional<User> get(Long id);
 
     Collection<User> getCommonFriends(Long userId, Long otherId);
+
+    void delete(Long id);
 }

@@ -83,4 +83,8 @@ public class UserService {
             user.setName(user.getLogin());
         }
     }
+
+    public void delete(Long id) {
+        userStorage.delete(id);
+    }
 }

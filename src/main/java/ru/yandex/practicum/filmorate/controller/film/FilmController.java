@@ -46,6 +46,11 @@ public class FilmController {
         return FilmMapper.toFilmDto(filmService.update(FilmMapper.toFilm(filmDetails)));
     }
 
+    @DeleteMapping("/{filmId}")
+    public void delete(@PathVariable Long filmId) {
+        filmService.delete(filmId);
+    }
+
     @PutMapping("/{id}/like/{userId}")
     public FilmDto putLike(@PathVariable Long id, @PathVariable Long userId) {
         return FilmMapper.toFilmDto(filmService.addLike(id, userId));

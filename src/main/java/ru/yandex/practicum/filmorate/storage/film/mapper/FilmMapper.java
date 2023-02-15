@@ -86,7 +86,7 @@ public class FilmMapper {
                 .description(filmDto.getDescription())
                 .mpa(filmDto.getMpa())
                 .whoLikedUserIds(filmDto.getWhoLikedUserIds() != null ? filmDto.getWhoLikedUserIds() : new HashSet<>())
-                .genres(filmDto.getGenres())
+                .genres(doSortingGenres(filmDto.getGenres()))
                 .build();
     }
 
@@ -101,5 +101,14 @@ public class FilmMapper {
                 .whoLikedUserIds(film.getWhoLikedUserIds())
                 .genres(film.getGenres())
                 .build();
+    }
+
+    private static Set<Genre> doSortingGenres(Set<Genre> genres) {
+        if (genres == null) {
+            return new HashSet<>();
+        }
+        TreeSet<Genre> sorted = new TreeSet<>(Comparator.comparing(Genre::getId));
+        sorted.addAll(genres);
+        return sorted;
     }
 }

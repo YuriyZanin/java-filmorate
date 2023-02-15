@@ -27,7 +27,7 @@ public class FilmService {
     }
 
     public Film create(Film film) {
-        return filmStorage.save(film);
+        return filmStorage.create(film);
     }
 
     public Film update(Film film) {
@@ -64,5 +64,9 @@ public class FilmService {
 
     public Collection<Film> getCommon(Long userId, Long friendId) {
         return filmStorage.getCommon(userId, friendId);
+    }
+
+    public void delete(Long id) {
+        filmStorage.delete(id);
     }
 }

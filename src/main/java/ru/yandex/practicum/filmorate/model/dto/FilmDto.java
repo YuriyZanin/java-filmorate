@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Rating;
 import ru.yandex.practicum.filmorate.util.validation.MinDate;
@@ -43,4 +44,6 @@ public class FilmDto {
     private final Set<Long> whoLikedUserIds = new HashSet<>();
     @Builder.Default
     private Set<Genre> genres = new TreeSet<>(Comparator.comparing(Genre::getId));
+    @Builder.Default
+    private Set<Director> directors = new HashSet<>();
 }

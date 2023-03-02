@@ -8,6 +8,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.film.mapper.FilmMapper;
@@ -33,12 +34,16 @@ public class FilmDbStorage implements FilmStorage {
             "       r.name AS rating_name,\n" +
             "       array_agg(genre_id) AS genre_ids,\n" +
             "       array_agg(g.name) AS genre_names,\n" +
-            "       array_agg(fwlu.who_liked_user_id) AS who_liked_users_ids\n" +
+            "       array_agg(fwlu.who_liked_user_id) AS who_liked_users_ids,\n" +
+            "       array_agg(d.id) AS director_ids,\n" +
+            "       array_agg(d.name) AS director_names\n" +
             "FROM films f\n" +
             "         JOIN ratings r ON r.id = f.rating_id\n" +
             "         LEFT JOIN film_genres fg ON fg.film_id = f.id\n" +
             "         LEFT JOIN genres g ON g.id = fg.genre_id\n" +
-            "         LEFT JOIN film_who_liked_users fwlu ON fwlu.film_id = f.id\n";
+            "         LEFT JOIN film_who_liked_users fwlu ON fwlu.film_id = f.id\n" +
+            "         LEFT JOIN film_directors fd ON fd.film_id = f.id\n" +
+            "         LEFT JOIN directors d ON d.id = fd.director_id\n";
 
     public FilmDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -69,7 +74,7 @@ public class FilmDbStorage implements FilmStorage {
         long filmId = keyHolder.getKey().longValue();
         film.setId(filmId);
         log.info("Фильм {} сохранен с идентификатором {}", film.getName(), filmId);
-        updateGenresAndLikes(film);
+        updateGenresLikesDirectors(film);
         return film;
     }
 
@@ -92,7 +97,7 @@ public class FilmDbStorage implements FilmStorage {
             throw new NotFoundException(message);
         }
 
-        updateGenresAndLikes(film);
+        updateGenresLikesDirectors(film);
         log.info("Фильм {} обновлен", film.getId());
         return film;
     }
@@ -120,6 +125,14 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
+    public Collection<Film> getByDirector(Long directorId) {
+        SqlRowSet rowSet = jdbcTemplate.queryForRowSet(ALL_FILMS_QUERY +
+                "WHERE d.id = ?\n" +
+                "GROUP BY f.id;\n", directorId);
+        return FilmMapper.makeFilmList(rowSet);
+    }
+
+    @Override
     public void delete(Long id) {
         jdbcTemplate.update("DELETE FROM films WHERE id = ?", id);
     }
@@ -136,9 +149,10 @@ public class FilmDbStorage implements FilmStorage {
         return FilmMapper.makeFilmList(rowSet);
     }
 
-    private void updateGenresAndLikes(Film film) {
+    private void updateGenresLikesDirectors(Film film) {
         jdbcTemplate.update("DELETE FROM film_genres WHERE film_id = ?", film.getId());
         jdbcTemplate.update("DELETE FROM film_who_liked_users WHERE film_id = ?", film.getId());
+        jdbcTemplate.update("DELETE FROM film_directors WHERE film_id = ?", film.getId());
 
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             for (Genre genre : film.getGenres()) {
@@ -157,6 +171,13 @@ public class FilmDbStorage implements FilmStorage {
                             film.getId(),
                             userId);
                 }
+            }
+        }
+
+        if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
+            for (Director director : film.getDirectors()) {
+                jdbcTemplate.update("INSERT INTO film_directors (DIRECTOR_ID, FILM_ID) " +
+                        "VALUES (?,?)", director.getId(), film.getId());
             }
         }
     }

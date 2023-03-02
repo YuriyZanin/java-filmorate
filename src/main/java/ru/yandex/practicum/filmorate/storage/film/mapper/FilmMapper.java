@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.film.mapper;
 
 import org.springframework.jdbc.support.rowset.SqlRowSet;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Rating;
@@ -30,6 +31,7 @@ public class FilmMapper {
                 .mpa(makeRating(rs))
                 .whoLikedUserIds(makeWhoLikedUsers(rs))
                 .genres(makeGenres(rs))
+                .directors(makeDirectors(rs))
                 .build();
     }
 
@@ -77,6 +79,26 @@ public class FilmMapper {
         return genres;
     }
 
+    public static Set<Director> makeDirectors(SqlRowSet rs) {
+        final Set<Director> directors = new HashSet<>();
+        try {
+            SerialArray directorIds = (SerialArray) rs.getObject("DIRECTOR_IDS");
+            SerialArray directorNames = (SerialArray) rs.getObject("DIRECTOR_NAMES");
+            Object[] ids = (Object[]) directorIds.getArray();
+            Object[] names = (Object[]) directorNames.getArray();
+            for (int i = 0; i < ids.length; i++) {
+                if (ids[i] != null) {
+                    Long directorId = Long.parseLong(ids[i].toString());
+                    String directorName = names[i].toString();
+                    directors.add(Director.builder().id(directorId).name(directorName).build());
+                }
+            }
+        } catch (SQLException e) {
+            throw new ValidationException("Ошибка преобразования режисеров");
+        }
+        return directors;
+    }
+
     public static Film toFilm(FilmDto filmDto) {
         return Film.builder()
                 .id(filmDto.getId())
@@ -87,6 +109,7 @@ public class FilmMapper {
                 .mpa(filmDto.getMpa())
                 .whoLikedUserIds(filmDto.getWhoLikedUserIds() != null ? filmDto.getWhoLikedUserIds() : new HashSet<>())
                 .genres(doSortingGenres(filmDto.getGenres()))
+                .directors(filmDto.getDirectors())
                 .build();
     }
 
@@ -100,6 +123,7 @@ public class FilmMapper {
                 .mpa(film.getMpa())
                 .whoLikedUserIds(film.getWhoLikedUserIds())
                 .genres(film.getGenres())
+                .directors(film.getDirectors())
                 .build();
     }
 

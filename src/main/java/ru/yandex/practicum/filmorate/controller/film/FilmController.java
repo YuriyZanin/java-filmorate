@@ -70,4 +70,11 @@ public class FilmController {
     public Collection<FilmDto> findCommon(@RequestParam Long userId, @RequestParam Long friendId) {
         return filmService.getCommon(userId, friendId).stream().map(FilmMapper::toFilmDto).collect(Collectors.toList());
     }
+
+    @GetMapping("/director/{directorId}")
+    public Collection<FilmDto> findByDirectorWithSort(@PathVariable Long directorId,
+                                                      @RequestParam(value = "sortBy") String sortParameter) {
+        return filmService.getByDirectorWithSort(directorId, sortParameter).stream()
+                .map(FilmMapper::toFilmDto).collect(Collectors.toList());
+    }
 }

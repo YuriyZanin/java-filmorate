@@ -75,4 +75,9 @@ public class InMemoryFilmStorage implements FilmStorage {
     public void delete(Long id) {
         films.remove(id);
     }
+
+    @Override
+    public Collection<Film> getByDirector(Long directorId) {
+        return null;
+    }
 }

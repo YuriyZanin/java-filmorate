@@ -7,8 +7,10 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.user.UserService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.util.exeption.NotFoundException;
+import ru.yandex.practicum.filmorate.util.exeption.ValidationException;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.stream.Collectors;
 
 @Service
@@ -16,10 +18,12 @@ public class FilmService {
 
     private final FilmStorage filmStorage;
     private final UserService userService;
+    private final DirectorService directorService;
 
-    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage, UserService userService) {
+    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage, UserService userService, DirectorService directorService) {
         this.filmStorage = filmStorage;
         this.userService = userService;
+        this.directorService = directorService;
     }
 
     public Collection<Film> getAll() {
@@ -68,5 +72,20 @@ public class FilmService {
 
     public void delete(Long id) {
         filmStorage.delete(id);
+    }
+
+    public Collection<Film> getByDirectorWithSort(Long directorId, String sortParameter) {
+        directorService.get(directorId);
+        Collection<Film> films = filmStorage.getByDirector(directorId);
+        if (sortParameter.equals("likes")) {
+            return films.stream()
+                    .sorted(Comparator.comparingInt(f -> f.getWhoLikedUserIds().size())).collect(Collectors.toList());
+        }
+        if (sortParameter.equals("year")) {
+            return films.stream()
+                    .sorted(Comparator.comparingInt(f -> f.getReleaseDate().getYear())).collect(Collectors.toList());
+        } else {
+            throw new ValidationException("Неверный запрос");
+        }
     }
 }

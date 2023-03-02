@@ -24,4 +24,6 @@ public class Film {
     private Set<Long> whoLikedUserIds = new HashSet<>();
     @Builder.Default
     private Set<Genre> genres = new TreeSet<>(Comparator.comparing(Genre::getId));
+    @Builder.Default
+    private Set<Director> directors = new HashSet<>();
 }

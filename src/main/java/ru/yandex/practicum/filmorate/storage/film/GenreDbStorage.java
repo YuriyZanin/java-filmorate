@@ -31,9 +31,10 @@ public class GenreDbStorage implements GenreStorage {
         SqlRowSet rowSet = jdbcTemplate.queryForRowSet("SELECT * FROM genres WHERE id = ?", id);
 
         if (rowSet.next()) {
-            return new Genre(
-                    rowSet.getLong("id"),
-                    rowSet.getString("name"));
+            return Genre.builder()
+                    .id(rowSet.getLong("id"))
+                    .name(rowSet.getString("name"))
+                    .build();
         } else {
             String message = "Жанр с идентификатором " + id + " не найден.";
             log.info(message);
@@ -42,6 +43,9 @@ public class GenreDbStorage implements GenreStorage {
     }
 
     private Genre makeGenre(ResultSet rs) throws SQLException {
-        return new Genre(rs.getLong("id"), rs.getString("name"));
+        return Genre.builder()
+                .id(rs.getLong("id"))
+                .name(rs.getString("name"))
+                .build();
     }
 }

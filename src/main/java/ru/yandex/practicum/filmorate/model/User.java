@@ -1,23 +1,23 @@
 package ru.yandex.practicum.filmorate.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
-@Data
-@Builder
+@SuperBuilder
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
-public class User {
+public class User extends BaseEntity {
     private String email;
     private String login;
     private LocalDate birthday;
-    private Long id;
     private String name;
     @Builder.Default
     private Set<Long> friendIds = new HashSet<>();

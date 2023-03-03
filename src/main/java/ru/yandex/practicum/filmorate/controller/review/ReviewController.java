@@ -7,11 +7,12 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.dto.ReviewDto;
 import ru.yandex.practicum.filmorate.service.review.ReviewService;
 import ru.yandex.practicum.filmorate.storage.review.mapper.ReviewMapper;
-import ru.yandex.practicum.filmorate.util.ValidationUtil;
 
 import javax.validation.Valid;
 import java.util.Collection;
 import java.util.stream.Collectors;
+
+import static ru.yandex.practicum.filmorate.util.ValidationUtil.checkErrors;
 
 @RestController
 @RequestMapping("/reviews")
@@ -21,13 +22,13 @@ public class ReviewController {
 
     @PostMapping
     public ReviewDto create(@Valid @RequestBody ReviewDto reviewDetails, BindingResult errors) {
-        ValidationUtil.checkErrors(errors);
+        checkErrors(errors);
         return ReviewMapper.toReviewDto(reviewService.create(ReviewMapper.toReview(reviewDetails)));
     }
 
     @PutMapping
     public ReviewDto update(@Valid @RequestBody ReviewDto reviewDetails, BindingResult errors) {
-        ValidationUtil.checkErrors(errors);
+        checkErrors(errors);
         return ReviewMapper.toReviewDto(reviewService.update(ReviewMapper.toReview(reviewDetails)));
     }
 

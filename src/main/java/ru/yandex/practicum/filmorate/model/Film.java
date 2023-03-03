@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
 import java.util.Comparator;
@@ -8,16 +9,18 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
-@Data
-@Builder
+@SuperBuilder
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
-public class Film {
+public class Film extends BaseEntity {
     private String name;
     private LocalDate releaseDate;
     private int duration;
     private String description;
-    private Long id;
     private Rating mpa;
     @EqualsAndHashCode.Exclude
     @Builder.Default

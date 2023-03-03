@@ -3,6 +3,8 @@ package ru.yandex.practicum.filmorate.model;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.time.LocalDateTime;
+
 @SuperBuilder
 @Getter
 @Setter
@@ -10,11 +12,10 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
-public class Review extends BaseEntity {
+public class Event extends BaseEntity {
     private User user;
-    private Film film;
-    private String content;
-    private Boolean isPositive;
-    @Builder.Default
-    private int useful = 0;
+    private EventType type;
+    private Operation operation;
+    private BaseEntity entity;
+    private LocalDateTime eventTime;
 }

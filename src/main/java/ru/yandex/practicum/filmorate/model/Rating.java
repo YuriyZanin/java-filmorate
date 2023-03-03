@@ -1,15 +1,20 @@
 package ru.yandex.practicum.filmorate.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
-@Data
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
-@RequiredArgsConstructor
-@Builder
-public class Rating {
-    private final Long id;
+@NoArgsConstructor
+@SuperBuilder
+public class Rating extends BaseEntity {
     private String name;
+
+    public Rating(Long id, String name) {
+        super(id);
+        this.name = name;
+    }
 }

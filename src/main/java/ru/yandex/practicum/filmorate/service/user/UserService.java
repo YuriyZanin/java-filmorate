@@ -2,10 +2,16 @@ package ru.yandex.practicum.filmorate.service.user;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.model.Event;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.event.EventStorage;
+import ru.yandex.practicum.filmorate.storage.event.mapper.EventMapper;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import ru.yandex.practicum.filmorate.util.exeption.NotFoundException;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
@@ -13,9 +19,11 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserStorage userStorage;
+    private final EventStorage eventStorage;
 
-    public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage, EventStorage eventStorage) {
         this.userStorage = userStorage;
+        this.eventStorage = eventStorage;
     }
 
     public Collection<User> getAll() {
@@ -45,7 +53,10 @@ public class UserService {
         user.getFriendIds().add(friend.getId());
 
         userStorage.update(friend);
-        return userStorage.update(user);
+        userStorage.update(user);
+
+        eventStorage.create(EventMapper.toEvent(user, friend, EventType.FRIEND, Operation.ADD, LocalDateTime.now()));
+        return user;
     }
 
     public User addFriendWithConfirm(Long userId, Long friendId) {
@@ -56,7 +67,11 @@ public class UserService {
         friend.getFriendIds().add(userId);
 
         userStorage.update(friend);
-        return userStorage.update(user);
+        userStorage.update(user);
+
+        eventStorage.create(EventMapper.toEvent(user, friend, EventType.FRIEND, Operation.ADD, LocalDateTime.now()));
+        eventStorage.create(EventMapper.toEvent(friend, user, EventType.FRIEND, Operation.ADD, LocalDateTime.now()));
+        return user;
     }
 
     public User removeFriend(Long userId, Long friendId) {
@@ -66,7 +81,10 @@ public class UserService {
         user.getFriendIds().remove(friendId);
 
         userStorage.update(friend);
-        return userStorage.update(user);
+        userStorage.update(user);
+
+        eventStorage.create(EventMapper.toEvent(user, friend, EventType.FRIEND, Operation.REMOVE, LocalDateTime.now()));
+        return user;
     }
 
     public Collection<User> getFriends(Long userId) {
@@ -86,5 +104,10 @@ public class UserService {
 
     public void delete(Long id) {
         userStorage.delete(id);
+    }
+
+    public Collection<Event> getFeed(Long userId) {
+        get(userId);
+        return eventStorage.getFeedList(userId);
     }
 }

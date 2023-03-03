@@ -4,8 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.model.dto.EventDto;
 import ru.yandex.practicum.filmorate.model.dto.UserDto;
 import ru.yandex.practicum.filmorate.service.user.UserService;
+import ru.yandex.practicum.filmorate.storage.event.mapper.EventMapper;
 import ru.yandex.practicum.filmorate.storage.user.mapper.UserMapper;
 
 import javax.validation.Valid;
@@ -71,5 +73,10 @@ public class UserController {
     @GetMapping("/{id}/friends/common/{otherId}")
     public Collection<UserDto> findCommon(@PathVariable Long id, @PathVariable Long otherId) {
         return userService.getCommonFriends(id, otherId).stream().map(UserMapper::toUserDto).collect(Collectors.toList());
+    }
+
+    @GetMapping("/{id}/feed")
+    public Collection<EventDto> getFeed(@PathVariable("id") Long userId) {
+        return userService.getFeed(userId).stream().map(EventMapper::toEventDto).collect(Collectors.toList());
     }
 }
